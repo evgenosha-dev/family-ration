@@ -1,0 +1,8 @@
+﻿# Система
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Редакторы
+.vscode/
+.idea/

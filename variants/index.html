@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Семейный рацион — варианты сайта</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f6f5f1; color: #2b2b28; line-height: 1.55; }
+    .container { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+    header { background: linear-gradient(135deg, #2f855a 0%, #38a169 55%, #4caf85 100%); color: #fff; padding: 42px 0 34px; }
+    header h1 { margin: 0 0 8px; font-size: 30px; }
+    header p { margin: 0; opacity: .92; max-width: 700px; }
+    main { padding: 26px 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .card { background: #fff; border: 1px solid #e7e5de; border-radius: 14px; padding: 20px;
+      box-shadow: 0 1px 2px rgba(43,43,40,.05), 0 8px 24px -12px rgba(43,43,40,.18);
+      display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit; transition: .15s; }
+    .card:hover { border-color: #38a169; transform: translateY(-2px); }
+    .card h2 { margin: 0; font-size: 19px; }
+    .card .tag { display: inline-block; font-size: 12px; font-weight: 700; background: #e6f4ec; color: #2f855a;
+      border-radius: 999px; padding: 2px 10px; align-self: flex-start; }
+    .card p { margin: 0; color: #7a7a72; font-size: 14px; }
+    .card .go { margin-top: auto; font-weight: 700; color: #2f855a; }
+    .note { margin-top: 22px; background: #fff; border: 1px solid #e7e5de; border-radius: 14px; padding: 16px 20px; font-size: 14px; color: #7a7a72; }
+    footer { padding: 20px 0 36px; }
+    footer p { text-align: center; color: #7a7a72; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>🥗 Семейный рацион — варианты сайта</h1>
+      <p>Четыре варианта одного приложения — сбалансированное меню для семьи (девушка 26, парень 26, сын 2 года) и сравнение цен в продуктовых магазинах. Выберите тот, что нравится, и опубликуйте на GitHub Pages.</p>
+    </div>
+  </header>
+  <main class="container">
+    <div class="grid">
+      <a class="card" href="../index.html">
+        <span class="tag">Основной</span>
+        <h2>Меню на день + магазины</h2>
+        <p>Генератор меню по фильтрам с точной нормой калорий, «оптимальной корзиной», экономией и недельным бюджетом.</p>
+        <span class="go">Открыть →</span>
+      </a>
+      <a class="card" href="v2-single-file/index.html">
+        <span class="tag">Быстрый</span>
+        <h2>Всё в одном файле</h2>
+        <p>Тот же основной вариант, но в одном HTML-файле. Открывается двойным щелчком, легко переслать одним файлом.</p>
+        <span class="go">Открыть →</span>
+      </a>
+      <a class="card" href="v3-weekly/index.html">
+        <span class="tag">Неделя целиком</span>
+        <h2>Планировщик на 7 дней</h2>
+        <p>Меню сразу на неделю с равномерным распределением блюд, недельной корзиной и сравнением итоговой суммы по магазинам.</p>
+        <span class="go">Открыть →</span>
+      </a>
+      <a class="card" href="v4-constructor/index.html">
+        <span class="tag">Ручной</span>
+        <h2>Конструктор меню</h2>
+        <p>Соберите день своими руками: выбираете блюда в каждый приём пищи, а БЖУ, калории и цена корзины считаются вживую.</p>
+        <span class="go">Открыть →</span>
+      </a>
+    </div>
+    <div class="note">
+      Все варианты используют одну базу продуктов и рецептов (<code>js/data.js</code>): цены, рейтинги магазинов и состав редактируются в одном месте. Инструкция по публикации на GitHub Pages — в README проекта.
+    </div>
+  </main>
+  <footer>
+    <p>Семейный рацион · 4 варианта · бесплатная публикация на GitHub Pages</p>
+  </footer>
+</body>
+</html>

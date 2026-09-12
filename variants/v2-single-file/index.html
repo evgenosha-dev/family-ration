@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Семейный рацион — сбалансированное меню и цены в магазинах</title>
+  <meta name="description" content="Составление сбалансированного рациона на семью из трёх человек: фильтры, настройки, сравнение цен и отзывов продуктовых магазинов.">
+  <style>
+/* ============================================================
+   СЕМЕЙНЫЙ РАЦИОН — стили
+   ============================================================ */
+
+:root {
+  --bg: #f6f5f1;
+  --card: #ffffff;
+  --ink: #2b2b28;
+  --muted: #7a7a72;
+  --line: #e7e5de;
+  --accent: #38a169;
+  --accent-dark: #2f855a;
+  --accent-soft: #e6f4ec;
+  --warn: #d97706;
+  --warn-soft: #fdf1e0;
+  --danger: #dc2626;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(43,43,40,.05), 0 8px 24px -12px rgba(43,43,40,.18);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.container { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+/* ---------- header ---------- */
+.site-header {
+  background: linear-gradient(135deg, #2f855a 0%, #38a169 55%, #4caf85 100%);
+  color: #fff;
+  padding: 34px 0 26px;
+}
+.site-header h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: .3px; }
+.tagline { margin: 0; opacity: .92; font-size: 15px; max-width: 720px; }
+
+/* ---------- tabs ---------- */
+.tabs { display: flex; gap: 8px; margin: 18px auto; flex-wrap: wrap; }
+.tab-btn {
+  border: 0; cursor: pointer;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 10px 18px; border-radius: 999px;
+  font-size: 15px; font-weight: 600;
+  box-shadow: var(--shadow);
+  transition: .15s;
+}
+.tab-btn:hover { border-color: var(--accent); }
+.tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.tab { display: none; animation: fade .25s ease; }
+.tab.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.hint { color: var(--muted); font-size: 13.5px; margin: 8px 0 16px; }
+
+/* ---------- family ---------- */
+.family-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.person-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--line);
+}
+.person-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.person-head strong { font-size: 17px; }
+.badge {
+  font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+}
+.badge.kid { background: #e0e7ff; color: #3730a3; }
+.badge.good { background: var(--accent-soft); color: var(--accent-dark); }
+.badge.review { background: #fef3c7; color: #92610a; }
+.badge.warn { background: #fee2e2; color: #b91c1c; }
+
+.person-card label { display: block; font-size: 12.5px; color: var(--muted); margin: 8px 0 4px; }
+.person-card input[type="number"],
+.person-card select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 14.5px; background: #fff; color: var(--ink);
+}
+.person-card select:disabled { opacity: .6; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.person-target { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); font-size: 13.5px; color: var(--muted); }
+
+.family-totals {
+  margin-top: 16px; background: var(--accent-soft); border: 1px solid #cfe9da;
+  border-radius: var(--radius); padding: 14px 18px; font-size: 15px;
+}
+.family-totals b { color: var(--accent-dark); }
+
+/* ---------- filters ---------- */
+.filters-panel {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px; box-shadow: var(--shadow); margin-bottom: 18px;
+}
+.filter-block { margin-bottom: 16px; }
+.filter-block h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+
+.radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio, .checkbox {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; cursor: pointer; user-select: none;
+}
+.chips input { accent-color: var(--accent); }
+.radio input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.budget-row { display: flex; align-items: center; gap: 14px; }
+#budget-range { flex: 1; accent-color: var(--accent); }
+.budget-value { font-weight: 700; white-space: nowrap; min-width: 70px; text-align: right; }
+
+.btn {
+  border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer;
+  padding: 9px 16px; border-radius: 10px; font-size: 14.5px; font-weight: 600;
+  transition: .15s;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent-dark); color: #fff; }
+.btn.big { width: 100%; padding: 13px; font-size: 15.5px; }
+
+/* ---------- menu summary ---------- */
+.summary {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.sum-item { font-size: 13.5px; color: var(--muted); }
+.sum-num { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.sum-num .unit { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.bar { height: 8px; border-radius: 99px; background: #ecebe4; overflow: hidden; margin-bottom: 6px; }
+.bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), #58c98f); }
+.sum-cap { font-size: 12px; }
+.balance-line { margin-top: 12px; font-size: 13.5px; color: var(--accent-dark); font-weight: 600; }
+
+/* ---------- meals ---------- */
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.meal-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px;
+}
+.meal-head { display: flex; align-items: center; justify-content: space-between; }
+.meal-head strong { font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.icon-btn {
+  border: 1px solid var(--line); background: #fff; border-radius: 8px; cursor: pointer;
+  width: 30px; height: 30px; font-size: 16px; color: var(--muted); transition: .15s;
+}
+.icon-btn:hover { color: var(--accent-dark); border-color: var(--accent); transform: rotate(90deg); }
+.meal-name { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.meal-meta { font-size: 13px; color: var(--muted); }
+.tag { background: var(--accent-soft); color: var(--accent-dark); border-radius: 6px; padding: 1px 7px; font-size: 12px; margin-left: 4px; }
+.meal-nutrients { display: flex; gap: 12px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.meal-nutrients b { color: var(--ink); }
+.meal-scale { font-size: 12px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; }
+.meal-empty { color: var(--danger); font-size: 14px; }
+
+/* ---------- stores ---------- */
+.store-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.store-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px; box-shadow: var(--shadow); text-align: center;
+}
+.store-name { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.store-name::before {
+  content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--sc, #999); margin-right: 6px; vertical-align: 1px;
+}
+.store-cost { font-size: 21px; font-weight: 800; }
+.store-sub { font-size: 12.5px; color: var(--muted); margin: 4px 0 8px; }
+.store-badges { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+
+.budget-box { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 16px; margin-bottom: 12px; font-size: 14.5px; }
+.warn-text { color: var(--danger); font-weight: 600; }
+.ok-text { color: var(--accent-dark); font-weight: 600; }
+.mixed-total { background: var(--accent-soft); border: 1px solid #cfe9da; border-radius: var(--radius); padding: 13px 16px; margin-bottom: 14px; font-size: 14.5px; }
+.mixed-total .detail { color: var(--muted); font-size: 13px; }
+
+.shop-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+
+/* ---------- shopping table ---------- */
+.shop-table {
+  width: 100%; border-collapse: collapse; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); font-size: 13.5px;
+}
+.shop-table th, .shop-table td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+.shop-table th {
+  background: #faf9f6; font-size: 12.5px; color: var(--muted); font-weight: 600;
+  position: sticky; top: 0;
+}
+.shop-table th::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--sc, #999); margin-right: 5px;
+}
+.th-sub { display: block; font-weight: 500; font-size: 11px; color: #9a9a91; }
+.shop-table tr:last-child td { border-bottom: 0; }
+.cat-row td { background: #f4f3ee; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #6b6b63; }
+.amount { white-space: nowrap; color: var(--muted); }
+.min-price { background: #fffbe8; font-weight: 700; }
+.na { color: #c9c9c0; }
+.col-pick select {
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; background: #fff;
+}
+
+/* ---------- footer ---------- */
+footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40px; }
+.publish-guide { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
+.publish-guide summary { cursor: pointer; font-weight: 700; font-size: 15px; }
+.publish-guide ol { margin: 12px 0 4px; padding-left: 20px; font-size: 14px; }
+.publish-guide li { margin-bottom: 8px; }
+.publish-guide code { background: #f1f0ea; border-radius: 5px; padding: 1px 6px; font-size: 13px; }
+.publish-guide a { color: var(--accent-dark); }
+.copyright { color: var(--muted); font-size: 12.5px; text-align: center; }
+
+/* ---------- print ---------- */
+@media print {
+  body { background: #fff; }
+  .site-header, .tabs, .filters-panel, .shop-actions, footer .publish-guide, .tab-btn { display: none; }
+  .tab { display: block !important; }
+  .tab:not(#tab-shopping) { display: none !important; }
+  .card, .summary, .budget-box, .mixed-total, .shop-table { box-shadow: none; border-color: #ccc; }
+  .shop-table th { position: static; }
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 640px) {
+  .family-grid, .menu-grid { grid-template-columns: 1fr; }
+  .shop-table { font-size: 12.5px; }
+  .shop-table th, .shop-table td { padding: 7px 8px; }
+  .site-header h1 { font-size: 23px; }
+}
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>🥗 Семейный рацион</h1>
+      <p class="tagline">Сбалансированное меню на троих — девушка, парень и малыш 2 лет. Фильтры, бюджет и сравнение цен в продуктовых магазинах.</p>
+    </div>
+  </header>
+
+  <nav class="tabs container">
+    <button class="tab-btn active" data-tab="family">👨‍👩‍👦 Семья</button>
+    <button class="tab-btn" data-tab="menu">🍽 Меню на день</button>
+    <button class="tab-btn" data-tab="shopping">🛒 Магазины и цены</button>
+  </nav>
+
+  <main class="container">
+    <!-- СЕМЬЯ -->
+    <section id="tab-family" class="tab active">
+      <p class="hint">Настройте параметры каждого члена семьи — нормы калорий и БЖУ пересчитаются автоматически по формуле Миффлина — Сан Жеора.</p>
+      <div id="family-cards" class="family-grid"></div>
+      <div id="family-totals" class="family-totals"></div>
+    </section>
+
+    <!-- МЕНЮ -->
+    <section id="tab-menu" class="tab">
+      <div class="filters-panel">
+        <div class="filter-block">
+          <h3>Стиль питания</h3>
+          <div id="filter-diet" class="radio-group"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Для ребёнка</h3>
+          <div id="filter-kid"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Кухня</h3>
+          <div id="filter-cuisine" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Исключить (аллергии / непереносимость)</h3>
+          <div id="filter-allergens" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Магазины для сравнения</h3>
+          <div id="filter-stores" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Бюджет на неделю</h3>
+          <div class="budget-row">
+            <input type="range" id="budget-range" min="1000" max="15000" step="100">
+            <span id="budget-value" class="budget-value"></span>
+          </div>
+        </div>
+        <button id="btn-generate" class="btn primary big">Сгенерировать меню на день</button>
+      </div>
+
+      <div id="menu-nutrition-summary" class="summary"></div>
+      <div id="menu-slots" class="menu-grid"></div>
+    </section>
+
+    <!-- МАГАЗИНЫ -->
+    <section id="tab-shopping" class="tab">
+      <div id="store-summary" class="store-summary"></div>
+      <div id="budget-box" class="budget-box"></div>
+      <div id="mixed-total" class="mixed-total"></div>
+      <div class="shop-actions">
+        <button id="btn-choose-cheapest" class="btn">Дешевле всего по каждому продукту</button>
+        <button id="btn-copy" class="btn">Копировать список</button>
+        <button id="btn-print" class="btn">Печать</button>
+      </div>
+      <div id="shopping-table"></div>
+      <p class="hint">Цены и рейтинги — ориентировочные и редактируются в файле js/data.js. Жёлтым подсвечена минимальная цена на продукт среди выбранных магазинов.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <details class="publish-guide">
+        <summary>Как бесплатно опубликовать сайт на GitHub Pages</summary>
+        <ol>
+          <li>Зарегистрируйтесь на <a href="https://github.com" target="_blank" rel="noopener">github.com</a> и создайте репозиторий (зелёная кнопка <b>New</b>), имя любое, например <code>family-ration</code>.</li>
+          <li>Загрузите файлы проекта: на странице репозитория нажмите <b>Add file → Upload files</b> и перетащите все файлы и папки <code>family-ration</code> (index.html, css, js, README.md, .nojekyll, .github).</li>
+          <li>Нажмите <b>Commit changes</b>.</li>
+          <li>Откройте <b>Settings → Pages</b> (пункт в меню слева). В разделе <b>Branch</b> выберите ветку <code>main</code>, папку <code>/ (root)</code> и нажмите <b>Save</b>.</li>
+          <li>Через 1–2 минуты сайт будет доступен по адресу <code>https://ваш-логин.github.io/family-ration/</code>.</li>
+        </ol>
+        <p class="hint">В папке проекта уже лежит готовый GitHub Action (папка .github/workflows) — с ним публикация происходит автоматически при каждом «пуше».</p>
+      </details>
+      <p class="copyright">Семейный рацион · сделано для публикации на GitHub Pages</p>
+    </div>
+  </footer>
+
+  <script>
+/* ============================================================
+   БАЗА ДАННЫХ
+   Магазины, продукты, рецепты
+   Цены и отзывы — ориентировочные, легко редактируются.
+   ============================================================ */
+
+const STORES = [
+  { id: 'pyat',   name: 'Пятёрочка',     color: '#e63329', rating: 3.9 },
+  { id: 'magnit', name: 'Магнит',        color: '#dc1f26', rating: 3.7 },
+  { id: 'vv',     name: 'ВкусВилл',      color: '#00a650', rating: 4.7 },
+  { id: 'lenta',  name: 'Лента',         color: '#005ca9', rating: 4.1 },
+  { id: 'ozon',   name: 'Ozon',          color: '#3b82f6', rating: 4.3 },
+  { id: 'lavka',  name: 'Яндекс Лавка',  color: '#fc3f1d', rating: 4.5 },
+];
+
+/* Множитель цены по магазину для «обычных» продуктов.
+   Отдельные продукты могут иметь свою цену в поле multOverride. */
+const DEFAULT_PRICE_MULT = {
+  pyat: 0.97, magnit: 0.98, vv: 1.25, lenta: 1.0, ozon: 0.95, lavka: 1.35,
+};
+
+const CATEGORIES = [
+  'Овощи и фрукты',
+  'Мясо и рыба',
+  'Молочные продукты',
+  'Крупы и бакалея',
+  'Орехи и перекусы',
+];
+
+/* Ценовые профили магазинов по категориям:
+   у каждой сети свои «сильные» категории, поэтому выгоднее покупать
+   разные продукты в разных магазинах (смешанная корзина). */
+const CATEGORY_PRICE_MULT = {
+  'Овощи и фрукты':    { pyat: 0.87, magnit: 0.92, vv: 1.18, lenta: 1.0,  ozon: 1.08, lavka: 1.42 },
+  'Мясо и рыба':       { pyat: 0.90, magnit: 0.95, vv: 1.32, lenta: 0.90, ozon: 1.02, lavka: 1.38 },
+  'Молочные продукты': { pyat: 0.96, magnit: 0.90, vv: 1.08, lenta: 0.98, ozon: 1.06, lavka: 1.30 },
+  'Крупы и бакалея':   { pyat: 0.98, magnit: 1.00, vv: 1.30, lenta: 1.00, ozon: 0.86, lavka: 1.25 },
+  'Орехи и перекусы':  { pyat: 1.00, magnit: 1.05, vv: 1.25, lenta: 1.05, ozon: 0.88, lavka: 1.30 },
+};
+
+/* Продукты.
+   id   – короткий идентификатор
+   name – название
+   cat  – категория
+   unit – 'кг' или 'шт'
+   base – базовая цена за кг (или за штуку)
+   p/f/c/kcal – БЖУ на 100 г
+   veg  – подходит вегетарианцам (без мяса/рыбы)
+   vegan– подходит веганам
+   alerg– аллергены
+   notAt– магазины, где продукта нет (null если есть везде)
+   mult – индивидуальная цена по магазинам (опционально)
+   rate – индивидуальная оценка отзывов по магазинам (опционально)
+*/
+const PRODUCTS = [
+  // ---------- Овощи и фрукты ----------
+  { id:'potato', name:'Картофель', cat:'Овощи и фрукты', unit:'кг', base:45,  p:1.9,  f:0.1,  c:17,    kcal:77, veg:true, vegan:true },
+  { id:'carrot', name:'Морковь',   cat:'Овощи и фрукты', unit:'кг', base:38,  p:0.9,  f:0.2,  c:9.6,   kcal:41, veg:true, vegan:true },
+  { id:'onion',  name:'Лук репчатый', cat:'Овощи и фрукты', unit:'кг', base:32, p:1.1, f:0.2, c:8.5,  kcal:40, veg:true, vegan:true },
+  { id:'tomato', name:'Помидоры',  cat:'Овощи и фрукты', unit:'кг', base:120, p:0.9, f:0.2, c:4.0,   kcal:20, veg:true, vegan:true },
+  { id:'cucum',  name:'Огурцы',    cat:'Овощи и фрукты', unit:'кг', base:95,  p:0.8, f:0.1, c:2.8,   kcal:15, veg:true, vegan:true },
+  { id:'cabbage',name:'Капуста белокочанная', cat:'Овощи и фрукты', unit:'кг', base:30, p:1.8, f:0.1, c:5.4, kcal:27, veg:true, vegan:true },
+  { id:'broccoli',name:'Брокколи', cat:'Овощи и фрукты', unit:'кг', base:180, p:2.8, f:0.4, c:6.6,  kcal:34, veg:true, vegan:true, mult:{pyat:null,magnit:null} },
+  { id:'beet',   name:'Свёкла',    cat:'Овощи и фрукты', unit:'кг', base:42,  p:1.6, f:0.2, c:9.6,   kcal:43, veg:true, vegan:true },
+  { id:'pepper', name:'Болгарский перец', cat:'Овощи и фрукты', unit:'кг', base:140, p:1.0, f:0.3, c:6.3, kcal:26, veg:true, vegan:true },
+  { id:'zucchini',name:'Кабачок',  cat:'Овощи и фрукты', unit:'кг', base:70,  p:0.6, f:0.3, c:5.7,   kcal:24, veg:true, vegan:true },
+  { id:'eggplant',name:'Баклажан', cat:'Овощи и фрукты', unit:'кг', base:110, p:1.0, f:0.1, c:4.5,   kcal:24, veg:true, vegan:true },
+  { id:'pumpkin',name:'Тыква',     cat:'Овощи и фрукты', unit:'кг', base:60,  p:1.0, f:0.1, c:4.4,   kcal:22, veg:true, vegan:true },
+  { id:'garlic', name:'Чеснок',    cat:'Овощи и фрукты', unit:'кг', base:160, p:6.4, f:0.5, c:33.1,  kcal:149, veg:true, vegan:true },
+  { id:'greens', name:'Зелень (укроп/петрушка)', cat:'Овощи и фрукты', unit:'кг', base:250, p:3.0, f:0.6, c:7.0, kcal:36, veg:true, vegan:true },
+  { id:'apple',  name:'Яблоки',    cat:'Овощи и фрукты', unit:'кг', base:85,  p:0.3, f:0.2, c:11.8,  kcal:52, veg:true, vegan:true },
+  { id:'banana', name:'Бананы',    cat:'Овощи и фрукты', unit:'кг', base:90,  p:1.1, f:0.3, c:22.8,  kcal:89, veg:true, vegan:true },
+  { id:'orange', name:'Апельсины', cat:'Овощи и фрукты', unit:'кг', base:100, p:0.9, f:0.1, c:11.8,  kcal:47, veg:true, vegan:true },
+  { id:'pear',   name:'Груши',     cat:'Овощи и фрукты', unit:'кг', base:110, p:0.3, f:0.2, c:12.7,  kcal:52, veg:true, vegan:true },
+  { id:'spinach',name:'Шпинат/листовой салат', cat:'Овощи и фрукты', unit:'кг', base:300, p:2.9, f:0.4, c:3.6, kcal:23, veg:true, vegan:true, mult:{pyat:null,magnit:null,ozon:null} },
+  { id:'avocado',name:'Авокадо',   cat:'Овощи и фрукты', unit:'кг', base:320, p:2.0, f:15.0, c:9.0,  kcal:160, veg:true, vegan:true, notAt:['pyat','magnit'] },
+
+  // ---------- Мясо и рыба ----------
+  { id:'chicken',name:'Куриное филе', cat:'Мясо и рыба', unit:'кг', base:280, p:23, f:1.2, c:0,   kcal:110, notAt:[] },
+  { id:'thighs', name:'Куриные бёдра', cat:'Мясо и рыба', unit:'кг', base:220, p:18, f:13, c:0,   kcal:190, notAt:[] },
+  { id:'mince',  name:'Говяжий фарш', cat:'Мясо и рыба', unit:'кг', base:420, p:18, f:20, c:0,   kcal:254, notAt:[] },
+  { id:'beef',   name:'Говядина',   cat:'Мясо и рыба', unit:'кг', base:520, p:19.7, f:12.4, c:0, kcal:187, notAt:[] },
+  { id:'egg',    name:'Яйца',       cat:'Мясо и рыба', unit:'шт', base:9,   p:12.6, f:10.6, c:1.2, kcal:155, veg:true, alerg:['яйца'] },
+  { id:'salmon', name:'Лосось (филе)', cat:'Мясо и рыба', unit:'кг', base:950, p:19.8, f:6.3, c:0, kcal:142, alerg:['рыба'], notAt:['pyat','magnit'] },
+  { id:'cod',    name:'Треска',     cat:'Мясо и рыба', unit:'кг', base:450, p:17.7, f:0.5, c:0,   kcal:82, alerg:['рыба'], notAt:['pyat'] },
+  { id:'shrimp', name:'Креветки',   cat:'Мясо и рыба', unit:'кг', base:900, p:18, f:0.8, c:0,     kcal:85, alerg:['морепродукты'], mult:{pyat:null,magnit:null} },
+
+  // ---------- Молочные продукты ----------
+  { id:'milk',   name:'Молоко 2,5%', cat:'Молочные продукты', unit:'кг', base:75, p:3.0, f:2.5, c:4.7, kcal:52, veg:true, alerg:['лактоза','молочное'] },
+  { id:'milkLF', name:'Молоко безлактозное', cat:'Молочные продукты', unit:'кг', base:120, p:3.0, f:1.5, c:4.9, kcal:47, veg:true, notAt:['pyat','magnit','lenta'] },
+  { id:'tvorog', name:'Творог 5%',  cat:'Молочные продукты', unit:'кг', base:260, p:17.2, f:5.0, c:1.8, kcal:121, veg:true, alerg:['лактоза','молочное'] },
+  { id:'yogurt', name:'Йогурт натуральный', cat:'Молочные продукты', unit:'кг', base:150, p:3.2, f:2.5, c:4.5, kcal:60, veg:true, alerg:['лактоза','молочное'] },
+  { id:'kefir',  name:'Кефир 2,5%', cat:'Молочные продукты', unit:'кг', base:75, p:3.0, f:2.5, c:4.0, kcal:53, veg:true, alerg:['лактоза','молочное'] },
+  { id:'smetana',name:'Сметана 15%', cat:'Молочные продукты', unit:'кг', base:130, p:2.6, f:15.0, c:3.6, kcal:162, veg:true, alerg:['лактоза','молочное'] },
+  { id:'cream',  name:'Сливки 10%', cat:'Молочные продукты', unit:'кг', base:140, p:3.0, f:10.0, c:4.0, kcal:118, veg:true, alerg:['лактоза','молочное'] },
+  { id:'cheese', name:'Сыр Российский', cat:'Молочные продукты', unit:'кг', base:520, p:24.1, f:29.5, c:0.3, kcal:364, veg:true, alerg:['лактоза','молочное'] },
+  { id:'butter', name:'Масло сливочное', cat:'Молочные продукты', unit:'кг', base:620, p:0.5, f:82.5, c:0.8, kcal:748, veg:true, alerg:['лактоза','молочное'] },
+
+  // ---------- Крупы и бакалея ----------
+  { id:'rice',   name:'Рис',        cat:'Крупы и бакалея', unit:'кг', base:95, p:6.7, f:0.7, c:78.9, kcal:344, veg:true, vegan:true },
+  { id:'buckwheat',name:'Гречка',   cat:'Крупы и бакалея', unit:'кг', base:100, p:12.6, f:3.3, c:62.1, kcal:313, veg:true, vegan:true },
+  { id:'oats',   name:'Овсяные хлопья', cat:'Крупы и бакалея', unit:'кг', base:110, p:12.3, f:6.1, c:59.5, kcal:342, veg:true, vegan:true, alerg:['глютен'] },
+  { id:'pasta',  name:'Макароны',   cat:'Крупы и бакалея', unit:'кг', base:90, p:10.4, f:1.1, c:71.5, kcal:350, veg:true, vegan:true, alerg:['глютен'] },
+  { id:'flour',  name:'Мука пшеничная', cat:'Крупы и бакалея', unit:'кг', base:70, p:10.8, f:1.1, c:69.9, kcal:331, veg:true, vegan:true, alerg:['глютен'] },
+  { id:'bread',  name:'Хлеб',       cat:'Крупы и бакалея', unit:'кг', base:70, p:6.8, f:1.3, c:40.7, kcal:201, veg:true, vegan:true, alerg:['глютен'] },
+  { id:'lentil', name:'Чечевица',   cat:'Крупы и бакалея', unit:'кг', base:120, p:24, f:1.5, c:46.3, kcal:295, veg:true, vegan:true, notAt:['pyat','magnit'] },
+  { id:'beans',  name:'Фасоль красная', cat:'Крупы и бакалея', unit:'кг', base:130, p:21, f:1.1, c:64, kcal:337, veg:true, vegan:true },
+  { id:'chickpea',name:'Нут',        cat:'Крупы и бакалея', unit:'кг', base:140, p:19, f:6, c:61,   kcal:364, veg:true, vegan:true, mult:{pyat:null} },
+  { id:'sugar',  name:'Сахар',      cat:'Крупы и бакалея', unit:'кг', base:65, p:0, f:0, c:99.9,   kcal:387, veg:true, vegan:true },
+  { id:'salt',   name:'Соль',       cat:'Крупы и бакалея', unit:'кг', base:30, p:0, f:0, c:0,      kcal:0, veg:true, vegan:true },
+  { id:'oil',    name:'Масло подсолнечное', cat:'Крупы и бакалея', unit:'кг', base:140, p:0, f:99.9, c:0, kcal:899, veg:true, vegan:true },
+  { id:'olive',  name:'Масло оливковое', cat:'Крупы и бакалея', unit:'кг', base:600, p:0, f:99.8, c:0, kcal:898, veg:true, vegan:true, mult:{pyat:null,magnit:null} },
+  { id:'tom_paste',name:'Томатная паста', cat:'Крупы и бакалея', unit:'кг', base:180, p:4.4, f:0.5, c:14.1, kcal:82, veg:true, vegan:true },
+  { id:'honey',  name:'Мёд',        cat:'Крупы и бакалея', unit:'кг', base:450, p:0.3, f:0, c:82.4,  kcal:304, veg:true, vegan:true },
+
+  // ---------- Орехи и перекусы ----------
+  { id:'walnut', name:'Грецкие орехи', cat:'Орехи и перекусы', unit:'кг', base:900, p:15.2, f:65.2, c:13.7, kcal:654, veg:true, vegan:true, alerg:['орехи'] },
+  { id:'almond', name:'Миндаль',   cat:'Орехи и перекусы', unit:'кг', base:1100, p:21.2, f:50, c:21.6, kcal:579, veg:true, vegan:true, alerg:['орехи'], mult:{pyat:null,magnit:null} },
+  { id:'darkchoc',name:'Шоколад тёмный', cat:'Орехи и перекусы', unit:'кг', base:700, p:4.9, f:31.3, c:61.5, kcal:546, veg:true, vegan:true, mult:{pyat:null} },
+  { id:'apricot',name:'Курага',    cat:'Орехи и перекусы', unit:'кг', base:330, p:3.4, f:0.5, c:62.6, kcal:241, veg:true, vegan:true, notAt:['pyat','magnit'] },
+];
+
+/* Рецепты.
+   meal – завтрак/обед/ужин/перекус
+   cuisine – кухня
+   kid  – подходит ребёнку 2 лет (щадящее, без орехов)
+   ing  – { productId: граммы } на всю семью (базовый размер)
+   Питательность и аллергены рецепта считаются автоматически из продуктов.
+*/
+const RECIPES = [
+  // ================= ЗАВТРАК =================
+  { id:'r1', name:'Овсяная каша с яблоком', meal:'breakfast', cuisine:'Русская', kid:true,
+    ing:{ oats:150, milk:500, apple:200, sugar:20, butter:15 } },
+  { id:'r2', name:'Гречка с молоком',        meal:'breakfast', cuisine:'Русская', kid:true,
+    ing:{ buckwheat:180, milk:400, butter:30, sugar:20 } },
+  { id:'r3', name:'Омлет с помидорами и сыром', meal:'breakfast', cuisine:'Русская',
+    ing:{ egg:300, tomato:200, cheese:50, milk:100, oil:10 } },
+  { id:'r4', name:'Творожная запеканка',     meal:'breakfast', cuisine:'Русская', kid:true,
+    ing:{ tvorog:500, flour:30, egg:100, sugar:60, smetana:50 } },
+  { id:'r5', name:'Рисовая каша с бананом',  meal:'breakfast', cuisine:'Русская', kid:true,
+    ing:{ rice:150, milk:500, banana:150, butter:20 } },
+  { id:'r6', name:'Йогурт с овсянкой и бананом', meal:'breakfast', cuisine:'Универсальная', kid:true,
+    ing:{ yogurt:400, oats:100, banana:100, honey:20 } },
+  { id:'r7', name:'Сырники со сметаной',     meal:'breakfast', cuisine:'Русская', kid:true,
+    ing:{ tvorog:400, flour:60, egg:50, sugar:50, oil:20, smetana:80 } },
+  { id:'r8', name:'Тосты с авокадо и яйцом', meal:'breakfast', cuisine:'Средиземноморская',
+    ing:{ bread:200, avocado:200, egg:100 } },
+
+  // ================= ОБЕД =================
+  { id:'r9',  name:'Борщ со сметаной',      meal:'lunch', cuisine:'Русская',
+    ing:{ cabbage:300, beet:250, potato:300, carrot:120, onion:120, beef:350, tom_paste:40, smetana:80, oil:20 } },
+  { id:'r10', name:'Куриный суп с вермишелью', meal:'lunch', cuisine:'Русская', kid:true,
+    ing:{ chicken:300, pasta:120, potato:300, carrot:120, onion:80 } },
+  { id:'r11', name:'Гречка с курицей и овощами', meal:'lunch', cuisine:'Русская',
+    ing:{ buckwheat:220, chicken:350, pepper:150, onion:100, carrot:100, oil:25 } },
+  { id:'r12', name:'Куриные бёдра с рисом и овощами', meal:'lunch', cuisine:'Универсальная',
+    ing:{ thighs:450, rice:200, broccoli:200, carrot:100, oil:15 } },
+  { id:'r13', name:'Тушёная говядина с картофелем', meal:'lunch', cuisine:'Русская',
+    ing:{ beef:400, potato:600, carrot:150, onion:120, oil:25 } },
+  { id:'r14', name:'Лосось с рисом и брокколи', meal:'lunch', cuisine:'Средиземноморская',
+    ing:{ salmon:350, rice:200, broccoli:200, olive:15 } },
+  { id:'r15', name:'Куриный плов',           meal:'lunch', cuisine:'Азиатская',
+    ing:{ rice:250, chicken:350, carrot:150, onion:150, oil:30, garlic:10 } },
+  { id:'r16', name:'Чечевичный суп',         meal:'lunch', cuisine:'Русская', veg:true, kid:true,
+    ing:{ lentil:250, carrot:150, onion:120, potato:300, tom_paste:40, oil:20 } },
+  { id:'r17', name:'Тушёные овощи с нутом',  meal:'lunch', cuisine:'Азиатская', veg:true, kid:true,
+    ing:{ chickpea:200, zucchini:300, eggplant:300, pepper:200, tom_paste:60, onion:100, oil:20 } },
+  { id:'r18', name:'Паста болоньезе',        meal:'lunch', cuisine:'Итальянская',
+    ing:{ pasta:300, mince:400, tom_paste:100, onion:120, garlic:10, oil:20 } },
+
+  // ================= УЖИН =================
+  { id:'r19', name:'Овощное рагу с говядиной', meal:'dinner', cuisine:'Русская',
+    ing:{ beef:350, potato:400, zucchini:300, tomato:200, onion:100, carrot:100 } },
+  { id:'r20', name:'Запечённая курица с картофелем', meal:'dinner', cuisine:'Русская', kid:true,
+    ing:{ thighs:500, potato:500, carrot:150, oil:15, garlic:10 } },
+  { id:'r21', name:'Рыбные котлеты с гречкой', meal:'dinner', cuisine:'Русская',
+    ing:{ cod:400, egg:50, bread:60, onion:80, buckwheat:180, oil:15 } },
+  { id:'r22', name:'Гречка с овощами',       meal:'dinner', cuisine:'Русская', veg:true, kid:true,
+    ing:{ buckwheat:250, zucchini:250, pepper:150, onion:100, carrot:100, oil:25 } },
+  { id:'r23', name:'Оладьи на кефире',       meal:'dinner', cuisine:'Русская', kid:true,
+    ing:{ flour:250, kefir:250, egg:50, sugar:30, oil:30 } },
+  { id:'r24', name:'Куриная запеканка с брокколи', meal:'dinner', cuisine:'Универсальная', kid:true,
+    ing:{ chicken:400, broccoli:250, egg:50, smetana:100, cheese:50 } },
+  { id:'r25', name:'Паста с овощами и сыром', meal:'dinner', cuisine:'Итальянская', veg:true,
+    ing:{ pasta:300, tomato:300, cheese:100, garlic:10, olive:25 } },
+  { id:'r26', name:'Треска в сметанном соусе с рисом', meal:'dinner', cuisine:'Русская',
+    ing:{ cod:400, smetana:120, rice:200, onion:100, oil:15 } },
+  { id:'r27', name:'Тыквенный суп-пюре',     meal:'dinner', cuisine:'Универсальная', veg:true, kid:true,
+    ing:{ pumpkin:700, carrot:150, onion:100, garlic:10, cream:150, olive:25 } },
+  { id:'r28', name:'Тефтели в томатном соусе с картофелем', meal:'dinner', cuisine:'Русская',
+    ing:{ mince:400, rice:100, onion:100, tom_paste:80, potato:500, oil:20 } },
+
+  // ================= ПЕРЕКУС =================
+  { id:'r29', name:'Йогурт с бананом и мёдом', meal:'snack', cuisine:'Универсальная', kid:true,
+    ing:{ yogurt:300, banana:150, honey:10 } },
+  { id:'r30', name:'Творог с мёдом и яблоком', meal:'snack', cuisine:'Русская', kid:true,
+    ing:{ tvorog:250, honey:30, apple:150 } },
+  { id:'r31', name:'Бутерброд с сыром',       meal:'snack', cuisine:'Универсальная', kid:true,
+    ing:{ bread:100, cheese:50, butter:20 } },
+  { id:'r32', name:'Смесь орехов с курагой',  meal:'snack', cuisine:'Универсальная', veg:true,
+    ing:{ walnut:30, almond:30, apricot:50 } },
+  { id:'r33', name:'Фруктовая тарелка',       meal:'snack', cuisine:'Универсальная', veg:true, kid:true,
+    ing:{ apple:200, banana:150, orange:200, pear:150 } },
+  { id:'r34', name:'Морковные палочки с йогуртовым соусом', meal:'snack', cuisine:'Универсальная', kid:true,
+    ing:{ carrot:200, yogurt:100 } },
+  { id:'r35', name:'Творожный десерт с бананом', meal:'snack', cuisine:'Русская', kid:true,
+    ing:{ tvorog:200, banana:150, sugar:15 } },
+  { id:'r36', name:'Варёное яйцо с хлебом',   meal:'snack', cuisine:'Универсальная',
+    ing:{ egg:100, bread:50 } },
+  { id:'r37', name:'Банановый смузи',         meal:'snack', cuisine:'Универсальная', kid:true,
+    ing:{ banana:200, milk:300, oats:50, honey:20 } },
+
+  // ============ веганские и «больше вариантов для фильтров» ============
+  { id:'r38', name:'Овсяная каша на воде с бананом', meal:'breakfast', cuisine:'Универсальная', veg:true, kid:true,
+    ing:{ oats:120, banana:200, apple:150, oil:15, sugar:20 } },
+  { id:'r39', name:'Рисовая каша на воде с бананом', meal:'breakfast', cuisine:'Универсальная', veg:true, kid:true,
+    ing:{ rice:160, banana:150, apple:150, oil:15, sugar:15 } },
+  { id:'r40', name:'Фруктовый смузи',         meal:'snack', cuisine:'Универсальная', veg:true, kid:true,
+    ing:{ banana:200, apple:150, orange:200 } },
+  { id:'r41', name:'Овощной суп с гречкой',   meal:'lunch', cuisine:'Русская', veg:true, kid:true,
+    ing:{ buckwheat:150, potato:300, carrot:150, onion:100, tom_paste:40, oil:15 } },
+  { id:'r42', name:'Запечённые овощи с рисом', meal:'dinner', cuisine:'Азиатская', veg:true, kid:true,
+    ing:{ rice:200, zucchini:250, eggplant:250, pepper:200, tom_paste:60, olive:25 } },
+  { id:'r43', name:'Овощное рагу со свеклой',  meal:'dinner', cuisine:'Русская', veg:true, kid:true,
+    ing:{ beet:300, potato:300, carrot:150, tomato:200, onion:100, oil:20 } },
+];
+
+/* Количество порций в базовом рецепте на семью.
+   Используется только для справочной информации в UI. */
+const FAMILY_PORTIONS = 3;
+</script>
+  <script>
+/* ============================================================
+   РАСЧЁТ НОРМ ПИТАНИЯ
+   Базовый обмен (Mifflin-St Jeor), активность, БЖУ на семью.
+   ============================================================ */
+
+const ACTIVITY_PRESETS = {
+  low:    { label: 'Низкая',        mult: 1.2 },
+  light:  { label: 'Средняя',       mult: 1.375 },
+  moderate:{ label: 'Высокая',      mult: 1.55 },
+  high:   { label: 'Очень высокая', mult: 1.725 },
+};
+
+const KID_FACTOR = 95; // ккал на кг веса для ребёнка 1-3 лет
+
+function calcPersonTargets(person) {
+  let kcal;
+  if (person.isChild) {
+    kcal = Math.round(person.weight * KID_FACTOR);
+  } else {
+    let bmr;
+    if (person.sex === 'm') {
+      bmr = 10 * person.weight + 6.25 * person.height - 5 * person.age + 5;
+    } else {
+      bmr = 10 * person.weight + 6.25 * person.height - 5 * person.age - 161;
+    }
+    kcal = Math.round(bmr * (person.activityMult || 1.375));
+  }
+  const protein = Math.round((kcal * 0.16) / 4);   // 16% ккал
+  const fat     = Math.round((kcal * 0.28) / 9);   // 28% ккал
+  const carb    = Math.round((kcal * 0.56) / 4);   // 56% ккал
+  return { kcal, protein, fat, carb };
+}
+
+function calcFamilyTargets(family) {
+  const totals = { kcal: 0, protein: 0, fat: 0, carb: 0 };
+  const perPerson = {};
+  family.forEach((p) => {
+    const t = calcPersonTargets(p);
+    perPerson[p.id] = t;
+    totals.kcal += t.kcal;
+    totals.protein += t.protein;
+    totals.fat += t.fat;
+    totals.carb += t.carb;
+  });
+  return { totals, perPerson };
+}
+
+/* Норма на один приём пищи (доля от суточной нормы) */
+const SLOT_SHARES = {
+  breakfast: 0.20,
+  lunch:     0.35,
+  dinner:    0.30,
+  snack1:    0.08,
+  snack2:    0.07,
+};
+
+const SLOT_LABELS = {
+  breakfast: 'Завтрак',
+  lunch:     'Обед',
+  dinner:    'Ужин',
+  snack1:    'Перекус 1',
+  snack2:    'Перекус 2',
+};
+
+/* Питательность продукта на указанное количество граммов (или штук) */
+function productNutrients(grams, prod) {
+  return {
+    kcal:    prod.kcal * grams / 100,
+    protein: prod.p * grams / 100,
+    fat:     prod.f * grams / 100,
+    carb:    prod.c * grams / 100,
+  };
+}
+
+const PRODUCT_BY_ID = {};
+PRODUCTS.forEach((p) => { PRODUCT_BY_ID[p.id] = p; });
+
+/* Автоподсчёт питательности рецепта из ингредиентов */
+function computeRecipeNutrition(recipe) {
+  let kcal = 0, protein = 0, fat = 0, carb = 0;
+  const allergenSet = new Set();
+  let vegetarian = true;
+  let vegan = true;
+  for (const [pid, grams] of Object.entries(recipe.ing)) {
+    const prod = PRODUCT_BY_ID[pid];
+    if (!prod) continue;
+    const n = productNutrients(grams, prod);
+    kcal += n.kcal; protein += n.protein; fat += n.fat; carb += n.carb;
+    if (prod.alerg) prod.alerg.forEach((a) => allergenSet.add(a));
+    if (!prod.veg) vegetarian = false;
+    if (!prod.vegan) vegan = false;
+  }
+  return {
+    ...recipe,
+    kcal: Math.round(kcal),
+    protein: Math.round(protein),
+    fat: Math.round(fat),
+    carb: Math.round(carb),
+    ingredients: Object.keys(recipe.ing),
+    vegetarian,
+    vegan,
+    allergens: [...allergenSet],
+  };
+}
+
+const RECIPE_NUTRITION_CACHE = {};
+function getRecipeNutrition(recipeId) {
+  if (!RECIPE_NUTRITION_CACHE[recipeId]) {
+    const recipe = RECIPES.find((r) => r.id === recipeId);
+    RECIPE_NUTRITION_CACHE[recipeId] = computeRecipeNutrition(recipe);
+  }
+  return RECIPE_NUTRITION_CACHE[recipeId];
+}
+
+/* Граммы на этикетке «порция/семья» — для UI */
+function formatPortions(recipe) {
+  const totalGrams = Object.values(recipe.ing).reduce((s, g) => s + g, 0);
+  return totalGrams;
+}
+</script>
+  <script>
+/* ============================================================
+   ГЕНЕРАТОР МЕНЮ
+   Фильтры по стилю питания, аллергенам, кухне, «детским» блюдам.
+   Подбор блюд по слотам с учётом целевых калорий каждого приёма.
+   ============================================================ */
+
+const ALLERGENS_LIST = [
+  { id: 'лактоза',     label: 'Лактоза / молочное' },
+  { id: 'молочное',    label: 'Молочный белок' },
+  { id: 'глютен',      label: 'Глютен' },
+  { id: 'яйца',        label: 'Яйца' },
+  { id: 'орехи',       label: 'Орехи' },
+  { id: 'арахис',      label: 'Арахис' },
+  { id: 'рыба',        label: 'Рыба' },
+  { id: 'морепродукты',label: 'Морепродукты' },
+];
+
+const DIET_STYLES = [
+  { id: 'any',        label: 'Любое' },
+  { id: 'vegetarian', label: 'Вегетарианское' },
+  { id: 'vegan',      label: 'Веганское' },
+  { id: 'meatfree',   label: 'Без мяса (рыба можно)' },
+];
+
+const CUISINES = ['Русская', 'Итальянская', 'Азиатская', 'Средиземноморская', 'Универсальная'];
+
+const includeAllergen = { лактоза: true, молочное: true }; // эти не выносим в «детские» исключения примитивы
+
+function recipeMatchesFilters(recipe, filters) {
+  if (filters.kidOnly && !recipe.kid) return false;
+  if (filters.cuisines.length && !filters.cuisines.includes(recipe.cuisine) && recipe.cuisine !== 'Универсальная') {
+    // универсальная подходит для любой выбранной кухни
+    if (!filters.cuisines.includes('Универсальная')) return false;
+  }
+  if (filters.diet === 'vegetarian' && !recipe.vegetarian) return false;
+  if (filters.diet === 'vegan' && !recipe.vegan) return false;
+  if (filters.diet === 'meatfree') {
+    // без мяса: не-вегетарианские рецепты разрешены только если их ингредиенты — рыба/морепродукты/яйца/молочка
+  }
+  for (const alerg of filters.excludeAllergens) {
+    if (recipe.allergens.includes(alerg)) return false;
+  }
+  return true;
+}
+
+/* Итоговый список допустимых рецептов под фильтры */
+function filterRecipes(filters) {
+  return RECIPES
+    .map((r) => getRecipeNutrition(r.id))
+    .filter((r) => recipeMatchesFilters(r, filters));
+}
+
+/* Доля рецепта, реально приходящаяся на «без мяса» при diet=meatfree */
+function pickCandidates(recipes, mealType, slotKcal, filters, rng) {
+  let candidates = recipes.filter((r) => r.meal === mealType);
+  if (filters.diet === 'meatfree') {
+    candidates = candidates.filter((r) => r.vegetarian || hasNoMeat(r));
+  }
+  if (!candidates.length) return [];
+
+  // предпочтительные — те, чьи ккал близки к цели слота, чтобы масштаб был разумным
+  const preferred = candidates.filter((r) => {
+    const ratio = r.kcal / slotKcal;
+    return ratio >= 0.5 && ratio <= 1.8;
+  });
+  const pool = preferred.length ? preferred : candidates;
+
+  // перемешиваем с фиксированным зерном (можно менять через rng)
+  const shuffled = shuffle(pool.slice(), rng);
+  return shuffled;
+}
+
+function hasNoMeat(recipe) {
+  return recipe.ingredients.every((pid) => {
+    const p = PRODUCT_BY_ID[pid];
+    return !(!p.veg && !p.alerg?.includes('рыба') && !p.alerg?.includes('морепродукты'));
+  });
+}
+
+function shuffle(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor((rng ? rng() : Math.random()) * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/* Генерация меню на день.
+   Возвращает { slots: [...], totals, balance }
+*/
+function generateMenu(filters, familyTargetKcal, rng) {
+  const recipes = filterRecipes(filters);
+  const usedIds = new Set();
+  const slots = [];
+  const totals = { kcal: 0, protein: 0, fat: 0, carb: 0 };
+  let balance = 0;
+  let emptySlots = 0;
+
+  const slotDefs = ['breakfast', 'lunch', 'dinner', 'snack1', 'snack2'];
+
+  for (const def of slotDefs) {
+    const target = familyTargetKcal * SLOT_SHARES[def];
+    let candidates = pickCandidates(recipes, def === 'snack1' || def === 'snack2' ? 'snack' : def, target, filters, rng);
+    candidates = candidates.filter((r) => !usedIds.has(r.id));
+    if (!candidates.length) {
+      // если все уникальные закончились — разрешаем повтор, лишь бы не пропадал слот
+      candidates = pickCandidates(recipes, def === 'snack1' || def === 'snack2' ? 'snack' : def, target, filters, rng);
+    }
+
+    if (!candidates.length) {
+      emptySlots++;
+      slots.push({ slot: def, recipe: null, scale: 0, kcal: 0, protein: 0, fat: 0, carb: 0 });
+      continue;
+    }
+
+    const recipe = candidates[0];
+    usedIds.add(recipe.id);
+    const scale = target / recipe.kcal;
+    const n = {
+      kcal: Math.round(recipe.kcal * scale),
+      protein: Math.round(recipe.protein * scale),
+      fat: Math.round(recipe.fat * scale),
+      carb: Math.round(recipe.carb * scale),
+    };
+    const slotBal = target > 0 ? Math.abs(n.kcal - target) / target : 0;
+    balance += slotBal;
+    totals.kcal += n.kcal;
+    totals.protein += n.protein;
+    totals.fat += n.fat;
+    totals.carb += n.carb;
+    slots.push({ slot: def, recipe, scale, kcal: n.kcal, protein: n.protein, fat: n.fat, carb: n.carb, balance: slotBal });
+  }
+
+  balance = slots.length ? balance / slots.length : 0;
+  const completeness = slotDefs.length ? (slotDefs.length - emptySlots) / slotDefs.length : 0;
+  return { slots, totals, balance, completeness };
+}
+
+/* Перегенерировать один слот в уже сгенерированном меню */
+function regenerateSlot(menu, slotDef, filters, familyTargetKcal, rng) {
+  const recipes = filterRecipes(filters);
+  const keptIds = new Set(
+    menu.slots.filter((s) => s.slot !== slotDef && s.recipe).map((s) => s.recipe.id)
+  );
+  const target = familyTargetKcal * SLOT_SHARES[slotDef];
+  let candidates = pickCandidates(
+    recipes,
+    slotDef === 'snack1' || slotDef === 'snack2' ? 'snack' : slotDef,
+    target, filters, rng
+  );
+  const prevId = menu.slots.find((s) => s.slot === slotDef).recipe?.id;
+  candidates = candidates.filter((r) => r.id !== prevId);
+  if (!candidates.length) return menu;
+
+  const unseen = candidates.filter((r) => !keptIds.has(r.id));
+  const recipe = (unseen.length ? unseen : candidates)[0];
+  const scale = target / recipe.kcal;
+
+  const newSlots = menu.slots.map((s) => {
+    if (s.slot !== slotDef) return s;
+    const n = {
+      kcal: Math.round(recipe.kcal * scale),
+      protein: Math.round(recipe.protein * scale),
+      fat: Math.round(recipe.fat * scale),
+      carb: Math.round(recipe.carb * scale),
+    };
+    return { slot: slotDef, recipe, scale, ...n, balance: Math.abs(n.kcal - target) / target };
+  });
+
+  return recomputeMenuTotals({ slots: newSlots }, familyTargetKcal);
+}
+
+function recomputeMenuTotals(menu, familyTargetKcal) {
+  const totals = { kcal: 0, protein: 0, fat: 0, carb: 0 };
+  let balance = 0;
+  menu.slots.forEach((s) => {
+    totals.kcal += s.kcal;
+    totals.protein += s.protein;
+    totals.fat += s.fat;
+    totals.carb += s.carb;
+    balance += s.balance || 0;
+  });
+  menu.totals = totals;
+  menu.balance = menu.slots.length ? balance / menu.slots.length : 0;
+  menu.completeness = menu.slots.filter((s) => s.recipe).length / menu.slots.length;
+  return menu;
+}
+</script>
+  <script>
+/* ============================================================
+   СПИСОК ПОКУПОК И СРАВНЕНИЕ МАГАЗИНОВ
+   Стоимость корзины по каждому магазину, отзывы, бюджет,
+   «смешанная корзина» — где каждый продукт покупать выгоднее.
+   ============================================================ */
+
+function storeListForProduct(prod, storeIds) {
+  const out = [];
+  const baseMult = prod.mult || CATEGORY_PRICE_MULT[prod.cat] || DEFAULT_PRICE_MULT;
+  for (const sid of storeIds) {
+    const store = STORES.find((s) => s.id === sid);
+    if (!store) continue;
+    const m = baseMult[sid];
+    if (m === null) continue;               // в этом магазине продукта нет
+    if (prod.notAt && prod.notAt.includes(sid)) continue;
+    const price = Math.round(prod.base * (m !== undefined ? m : DEFAULT_PRICE_MULT[sid]));
+    out.push({ storeId: sid, storeName: store.name, storeColor: store.color, price, rating: store.rating });
+  }
+  return out;
+}
+
+function unitInfo(prod) {
+  if (prod.unit === 'шт' && prod.id === 'egg') return { factor: 60, unit: 'шт', perUnitLabel: 'шт' };
+  return { factor: 1000, unit: 'кг', perUnitLabel: 'кг' };
+}
+
+/* Превращает меню в список покупок.
+   returns: [ { productId, name, cat, grams, pieces, amount, stores: [ {storeId, price, cost, rating} ] } ]
+*/
+function buildShoppingList(menu, storeIds) {
+  const acc = {}; // productId -> grams (сумма по всем блюдам с масштабом)
+  for (const s of menu.slots) {
+    if (!s.recipe) continue;
+    for (const [pid, grams] of Object.entries(s.recipe.ing)) {
+      acc[pid] = (acc[pid] || 0) + grams * s.scale;
+    }
+  }
+
+  const lines = [];
+  for (const [pid, grams] of Object.entries(acc)) {
+    const prod = PRODUCT_BY_ID[pid];
+    if (!prod) continue;
+    const ui = unitInfo(prod);
+    const pieces = Math.max(1, Math.ceil((grams / ui.factor) * (ui.unit === 'шт' ? 1 : 1)));
+    const amount = ui.unit === 'шт' ? pieces : grams / 1000;
+    const stores = storeListForProduct(prod, storeIds).map((st) => ({
+      ...st,
+      cost: Math.round(amount * st.price),
+    }));
+    lines.push({
+      productId: pid,
+      name: prod.name,
+      cat: prod.cat,
+      grams: Math.round(grams),
+      amount,
+      amountUnit: ui.unit,
+      stores,
+      availCount: stores.length,
+    });
+  }
+
+  lines.sort((a, b) => (a.cat < b.cat ? -1 : a.cat > b.cat ? 1 : 0));
+  return lines;
+}
+
+/* Итоги по каждому магазину для полной корзины */
+function storeTotals(shoppingList, storeIds) {
+  const totals = storeIds.map((sid) => {
+    const store = STORES.find((s) => s.id === sid);
+    let cost = 0, missing = 0;
+    const ratings = [];
+    for (const line of shoppingList) {
+      const st = line.stores.find((x) => x.storeId === sid);
+      if (!st) { missing++; continue; }
+      cost += st.cost;
+      ratings.push(st.rating);
+    }
+    const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+    return {
+      storeId: sid,
+      name: store.name,
+      color: store.color,
+      baseRating: store.rating,
+      avgRating: Math.round(avgRating * 10) / 10,
+      cost: Math.round(cost),
+      missing,
+      available: shoppingList.length - missing,
+    };
+  });
+  return totals;
+}
+
+/* Лучший магазин по цене и лучший — по отзывам */
+function bestStore(totals, shoppingList) {
+  let cheapest = null, bestRated = null;
+  for (const t of totals) {
+    if (t.missing === 0) {
+      if (!cheapest || t.cost < cheapest.cost) cheapest = t;
+    }
+    if (!bestRated || t.avgRating > bestRated.avgRating) bestRated = t;
+  }
+  let cheapestPartial = totals.length ? totals.reduce((a, b) => (a.missing < b.missing || (a.missing === b.missing && a.cost < b.cost) ? a : b)) : null;
+  return { cheapest, bestRated, cheapestPartial };
+}
+
+/* Смешанная корзина: для каждого продукта выбран магазин.
+   choices: { productId: storeId }
+   Если для продукта выбран магазин без прайса — пропускаем позицию.
+*/
+function mixedCart(shoppingList, choices) {
+  let cost = 0;
+  const items = [];
+  for (const line of shoppingList) {
+    const ch = choices[line.productId];
+    const st = ch ? line.stores.find((x) => x.storeId === ch) : null;
+    if (!st) { items.push({ ...line, chosen: null, cartCost: 0, source: 'нет в корзине' }); continue; }
+    cost += st.cost;
+    items.push({ ...line, chosen: st.storeId, cartCost: st.cost, source: st.storeName });
+  }
+  return { cost: Math.round(cost), items };
+}
+
+/* Недельный бюджет: множитель дней + предупреждение */
+function weekEstimate(dayCost, weeklyBudget) {
+  const weekCost = dayCost * 7;
+  const over = weeklyBudget > 0 && weekCost > weeklyBudget;
+  return { weekCost: Math.round(weekCost), over, deficit: weeklyBudget > 0 ? weekCost - weeklyBudget : 0 };
+}
+</script>
+  <script>
+/* ============================================================
+   ПРИЛОЖЕНИЕ: состояние, рендер, обработчики
+   ============================================================ */
+
+const DEFAULT_STATE = {
+  family: [
+    { id: 'woman', role: 'Девушка', age: 26, sex: 'f', weight: 58, height: 165, activityMult: 1.375 },
+    { id: 'man',   role: 'Парень',  age: 26, sex: 'm', weight: 78, height: 180, activityMult: 1.375 },
+    { id: 'kid',   role: 'Сын (2 года)', age: 2, sex: 'm', weight: 12.5, height: 88, activityMult: 1.5, isChild: true },
+  ],
+  filters: {
+    diet: 'any',
+    kidOnly: false,
+    cuisines: [],
+    excludeAllergens: [],
+    weeklyBudget: 6000,
+    stores: ['pyat', 'magnit', 'vv', 'lenta', 'ozon', 'lavka'],
+  },
+};
+
+const LS_KEY = 'semeinyi-racion-v1';
+let state = loadState() || deepClone(DEFAULT_STATE);
+let menu = null;
+let choices = {};          // productId -> storeId (смешанная корзина)
+let familyTargets = calcFamilyTargets(state.family);
+
+/* ---------- утилиты ---------- */
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    return { ...deepClone(DEFAULT_STATE), ...s, family: s.family || deepClone(DEFAULT_STATE.family), filters: { ...DEFAULT_STATE.filters, ...(s.filters || {}) } };
+  } catch (e) { return null; }
+}
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+}
+const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+const rub = (n) => fmt(n) + ' ₽';
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+/* ---------- вкладки ---------- */
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'shopping') renderShopping();
+    });
+  });
+}
+
+/* ---------- семья ---------- */
+function renderFamily() {
+  const wrap = document.getElementById('family-cards');
+  wrap.innerHTML = '';
+  state.family.forEach((p) => {
+    const card = document.createElement('div');
+    card.className = 'person-card';
+    card.innerHTML = `
+      <div class="person-head">
+        <strong>${esc(p.role)}</strong>
+        ${p.isChild ? '<span class="badge kid">ребёнок</span>' : ''}
+      </div>
+      <label>Пол
+        <select data-field="sex" ${p.isChild ? 'disabled' : ''}>
+          <option value="f" ${p.sex === 'f' ? 'selected' : ''}>Женский</option>
+          <option value="m" ${p.sex === 'm' ? 'selected' : ''}>Мужской</option>
+        </select>
+      </label>
+      <div class="grid2">
+        <label>Возраст
+          <input type="number" data-field="age" min="1" max="99" value="${p.age}">
+        </label>
+        <label>Вес, кг
+          <input type="number" data-field="weight" min="1" max="250" step="0.5" value="${p.weight}">
+        </label>
+      </div>
+      <div class="grid2">
+        <label>Рост, см
+          <input type="number" data-field="height" min="50" max="230" value="${p.height}">
+        </label>
+        <label>Активность
+          <select data-field="activityMult">
+            ${Object.entries(ACTIVITY_PRESETS).map(([k, v]) =>
+              `<option value="${v.mult}" ${Number(p.activityMult) === v.mult ? 'selected' : ''}>${v.label}</option>`).join('')}
+          </select>
+        </label>
+      </div>
+      <div class="person-target" data-target="${p.id}"></div>
+    `;
+    card.querySelectorAll('[data-field]').forEach((el) => {
+      el.addEventListener('change', () => {
+        const field = el.dataset.field;
+        const val = el.value;
+        if (field === 'age' || field === 'weight' || field === 'height') p[field] = parseFloat(val) || 0;
+        else if (field === 'activityMult') p[field] = parseFloat(val);
+        else p[field] = val;
+        familyTargets = calcFamilyTargets(state.family);
+        saveState();
+        renderFamilyTargets();
+        menu = generateMenu(state.filters, familyTargets.totals.kcal);
+        choices = {};
+        renderMenu();
+        renderShopping();
+      });
+    });
+    wrap.appendChild(card);
+  });
+  renderFamilyTargets();
+}
+
+function renderFamilyTargets() {
+  state.family.forEach((p) => {
+    const t = familyTargets.perPerson[p.id];
+    const el = document.querySelector(`[data-target="${p.id}"]`);
+    if (el && t) {
+      el.innerHTML = `≈ <b>${fmt(t.kcal)}</b> ккал · Б ${fmt(t.protein)} г · Ж ${fmt(t.fat)} г · У ${fmt(t.carb)} г`;
+    }
+  });
+  const tot = familyTargets.totals;
+  document.getElementById('family-totals').innerHTML =
+    `На семью в день: <b>${fmt(tot.kcal)}</b> ккал · белки <b>${fmt(tot.protein)} г</b> · жиры <b>${fmt(tot.fat)} г</b> · углеводы <b>${fmt(tot.carb)} г</b>`;
+}
+
+/* ---------- фильтры ---------- */
+function renderFilters() {
+  const f = state.filters;
+  const dietWrap = document.getElementById('filter-diet');
+  dietWrap.innerHTML = DIET_STYLES.map((d) =>
+    `<label class="radio"><input type="radio" name="diet" value="${d.id}" ${f.diet === d.id ? 'checked' : ''}> ${d.label}</label>`).join('');
+
+  const kidWrap = document.getElementById('filter-kid');
+  kidWrap.innerHTML = `<label class="checkbox"><input type="checkbox" id="kid-only" ${f.kidOnly ? 'checked' : ''}> Только блюда, подходящие ребёнку 2 лет</label>`;
+
+  const cuisineWrap = document.getElementById('filter-cuisine');
+  cuisineWrap.innerHTML = `<label class="checkbox"><input type="checkbox" class="cuisine-cb" value="all" ${!f.cuisines.length ? 'checked' : ''}> Любая кухня</label>` +
+    CUISINES.map((c) =>
+      `<label class="checkbox"><input type="checkbox" class="cuisine-cb" value="${c}" ${f.cuisines.includes(c) ? 'checked' : ''}> ${c}</label>`).join('');
+
+  const alergWrap = document.getElementById('filter-allergens');
+  alergWrap.innerHTML = ALLERGENS_LIST.map((a) =>
+    `<label class="checkbox"><input type="checkbox" class="alerg-cb" value="${a.id}" ${f.excludeAllergens.includes(a.id) ? 'checked' : ''}> ${a.label}</label>`).join('');
+
+  const storeWrap = document.getElementById('filter-stores');
+  storeWrap.innerHTML = STORES.map((s) =>
+    `<label class="checkbox" style="--sc:${s.color}"><input type="checkbox" class="store-cb" value="${s.id}" ${f.stores.includes(s.id) ? 'checked' : ''}> ${s.name}</label>`).join('');
+
+  const budgetRange = document.getElementById('budget-range');
+  const budgetVal = document.getElementById('budget-value');
+  budgetRange.value = f.weeklyBudget;
+  budgetVal.textContent = rub(f.weeklyBudget);
+
+  document.querySelectorAll('input[name="diet"]').forEach((el) => el.addEventListener('change', onFilterChange));
+  document.getElementById('kid-only').addEventListener('change', onFilterChange);
+  document.querySelectorAll('.cuisine-cb').forEach((el) => el.addEventListener('change', (e) => {
+    if (e.target.value === 'all' && e.target.checked) {
+      document.querySelectorAll('.cuisine-cb:not([value="all"])').forEach((x) => (x.checked = false));
+      f.cuisines = [];
+    } else {
+      document.querySelector('.cuisine-cb[value="all"]').checked = false;
+      f.cuisines = [...document.querySelectorAll('.cuisine-cb:checked')].map((x) => x.value).filter((v) => v !== 'all');
+    }
+    onFilterChange();
+  }));
+  document.querySelectorAll('.alerg-cb').forEach((el) => el.addEventListener('change', onFilterChange));
+  document.querySelectorAll('.store-cb').forEach((el) => el.addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (e.target.checked) { if (!f.stores.includes(v)) f.stores.push(v); }
+    else f.stores = f.stores.filter((x) => x !== v);
+    saveState();
+    pruneChoices();
+    renderShopping();
+  }));
+  budgetRange.addEventListener('input', () => { budgetVal.textContent = rub(parseInt(budgetRange.value, 10)); });
+  budgetRange.addEventListener('change', () => {
+    f.weeklyBudget = parseInt(budgetRange.value, 10);
+    saveState();
+    renderShopping();
+  });
+
+  document.getElementById('btn-generate').addEventListener('click', () => { menu = generateMenu(state.filters, familyTargets.totals.kcal); renderMenu(); renderShopping(); });
+}
+
+function onFilterChange() {
+  const f = state.filters;
+  f.diet = document.querySelector('input[name="diet"]:checked')?.value || 'any';
+  f.kidOnly = document.getElementById('kid-only').checked;
+  f.excludeAllergens = [...document.querySelectorAll('.alerg-cb:checked')].map((x) => x.value);
+  saveState();
+  pruneChoices();
+  menu = generateMenu(f, familyTargets.totals.kcal);
+  renderMenu();
+  renderShopping();
+}
+
+/* Убрать из смешанной корзины магазины, которые отключили в фильтре */
+function pruneChoices() {
+  const f = state.filters;
+  for (const pid of Object.keys(choices)) {
+    if (!f.stores.includes(choices[pid])) delete choices[pid];
+  }
+}
+
+/* ---------- меню ---------- */
+function renderMenu() {
+  if (!menu) { menu = generateMenu(state.filters, familyTargets.totals.kcal); }
+  renderMenuSummary();
+  const wrap = document.getElementById('menu-slots');
+  wrap.innerHTML = '';
+  const order = ['breakfast', 'lunch', 'dinner', 'snack1', 'snack2'];
+  order.forEach((slotDef) => {
+    const s = menu.slots.find((x) => x.slot === slotDef);
+    const card = document.createElement('div');
+    card.className = 'meal-card';
+    if (!s || !s.recipe) {
+      card.innerHTML = `
+        <div class="meal-head"><strong>${SLOT_LABELS[slotDef]}</strong></div>
+        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры</div>`;
+      wrap.appendChild(card);
+      return;
+    }
+    const r = s.recipe;
+    const tags = [];
+    if (r.kid) tags.push('детское');
+    if (r.vegetarian) tags.push('без мяса');
+    if (r.vegan) tags.push('веган');
+    card.innerHTML = `
+      <div class="meal-head">
+        <strong>${SLOT_LABELS[slotDef]}</strong>
+        <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+      </div>
+      <div class="meal-name">${esc(r.name)}</div>
+      <div class="meal-meta">${esc(r.cuisine)}${tags.length ? ' · ' + tags.map((t) => `<span class="tag">${t}</span>`).join(' ') : ''}</div>
+      <div class="meal-nutrients">
+        <span><b>${fmt(s.kcal)}</b> ккал</span>
+        <span>Б ${fmt(s.protein)} г</span>
+        <span>Ж ${fmt(s.fat)} г</span>
+        <span>У ${fmt(s.carb)} г</span>
+      </div>
+      <div class="meal-scale">порция × ${Math.round(s.scale * 10) / 10}</div>`;
+    wrap.appendChild(card);
+  });
+
+  wrap.querySelectorAll('[data-reg]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      menu = regenerateSlot(menu, btn.dataset.reg, state.filters, familyTargets.totals.kcal);
+      renderMenu();
+      renderShopping();
+    });
+  });
+}
+
+function renderMenuSummary() {
+  const targetKcal = familyTargets.totals.kcal;
+  const t = menu.totals;
+  const pctKcal = Math.min(100, Math.round((t.kcal / targetKcal) * 100));
+  const bar = (cur, target) => `<div class="bar"><div class="bar-fill" style="width:${Math.min(100, Math.round(cur / target * 100))}%"></div></div>`;
+  document.getElementById('menu-nutrition-summary').innerHTML = `
+    <div class="summary-grid">
+      <div class="sum-item"><div class="sum-num">${fmt(t.kcal)} / ${fmt(targetKcal)} <span class="unit">ккал</span></div>${bar(t.kcal, targetKcal)}<span class="sum-cap">${pctKcal}% от нормы</span></div>
+      <div class="sum-item"><div class="sum-num">${fmt(t.protein)} / ${fmt(familyTargets.totals.protein)} <span class="unit">г белка</span></div>${bar(t.protein, familyTargets.totals.protein)}</div>
+      <div class="sum-item"><div class="sum-num">${fmt(t.fat)} / ${fmt(familyTargets.totals.fat)} <span class="unit">г жиров</span></div>${bar(t.fat, familyTargets.totals.fat)}</div>
+      <div class="sum-item"><div class="sum-num">${fmt(t.carb)} / ${fmt(familyTargets.totals.carb)} <span class="unit">г углеводов</span></div>${bar(t.carb, familyTargets.totals.carb)}</div>
+    </div>
+    <div class="balance-line">Сбалансированность меню: ${Math.round((1 - menu.balance) * 100)}%</div>`;
+}
+
+/* ---------- магазины и цены ---------- */
+function renderShopping() {
+  if (!menu) return;
+  const storeIds = state.filters.stores;
+  const shoppingList = buildShoppingList(menu, storeIds);
+  const totals = storeTotals(shoppingList, storeIds);
+  const best = bestStore(totals, shoppingList);
+
+  // смешанная корзина
+  if (!Object.keys(choices).length) { applyChoicesCheapest(shoppingList, totals); }
+  const mixed = mixedCart(shoppingList, choices);
+
+  const week = weekEstimate(mixed.cost, state.filters.weeklyBudget);
+
+  // сводка по магазинам
+  const sumWrap = document.getElementById('store-summary');
+  sumWrap.innerHTML = totals.map((t) => {
+    const isCheapest = best.cheapest && best.cheapest.storeId === t.storeId;
+    const isBestReview = best.bestRated && best.bestRated.storeId === t.storeId;
+    const badges = [];
+    if (isCheapest) badges.push('<span class="badge good">дешевле всего</span>');
+    if (isBestReview) badges.push('<span class="badge review">лучшие отзывы</span>');
+    if (t.missing) badges.push(`<span class="badge warn">нет ${t.missing} поз.</span>`);
+    return `<div class="store-card">
+      <div class="store-name" style="--sc:${t.color}">${esc(t.name)}</div>
+      <div class="store-cost">${rub(t.cost)}</div>
+      <div class="store-sub">★ ${t.avgRating} / 5 · ${t.available} поз.</div>
+      <div class="store-badges">${badges.join('')}</div>
+    </div>`;
+  }).join('');
+
+  // бюджет
+  const budgetBox = document.getElementById('budget-box');
+  budgetBox.innerHTML = `
+    <div class="budget-line">День: <b>${rub(mixed.cost)}</b> · Неделя: <b>${rub(week.weekCost)}</b> из бюджета <b>${rub(state.filters.weeklyBudget)}</b>
+      ${week.over ? `<span class="warn-text">⚠ превышает бюджет на ${rub(week.deficit)} — попробуйте самый дешёвый магазин или смягчите блюда</span>` : '<span class="ok-text">✓ укладываетесь в бюджет</span>'}
+    </div>`;
+
+  // смешанная корзина
+  const cheapRef = best.cheapest ? best.cheapest.cost : totals.reduce((a, b) => a.cost + b.cost, 0);
+  const savings = cheapRef > mixed.cost ? cheapRef - mixed.cost : 0;
+  document.getElementById('mixed-total').innerHTML = `
+    <div class="mixed-line">
+      <b>Оптимальная корзина «каждый продукт там, где дешевле»: ${rub(mixed.cost)}</b>
+      ${savings ? `<span class="ok-text">экономия ${rub(savings)} по сравнению с лучшим одиночным магазином</span>` : ''}
+      ${savings ? '' : `<span class="detail">(лучше одиночного магазина не набралось — возите из одного места)</span>`}
+    </div>`;
+
+  // таблица продуктов
+  const wrap = document.getElementById('shopping-table');
+  let html = `<table class="shop-table"><thead><tr>
+    <th>Продукт</th><th>Кол-во</th>`;
+  storeIds.forEach((sid) => {
+    const st = totals.find((x) => x.storeId === sid);
+    html += `<th style="--sc:${st.color}">${esc(st.name)}<span class="th-sub">★${st.avgRating}</span></th>`;
+  });
+  html += `<th class="col-pick">Выбор</th></tr></thead><tbody>`;
+
+  let currentCat = '';
+  shoppingList.forEach((line) => {
+    if (line.cat !== currentCat) {
+      currentCat = line.cat;
+      html += `<tr class="cat-row"><td colspan="${storeIds.length + 3}">${esc(line.cat)}</td></tr>`;
+    }
+    const prices = line.stores.map((s) => s.cost);
+    const minCost = prices.length ? Math.min(...prices) : null;
+    html += `<tr data-rop="${line.productId}">
+      <td>${esc(line.name)}</td>
+      <td class="amount">${line.amountUnit === 'шт' ? fmt(line.amount) + ' шт' : fmt(line.amount) + ' кг'}</td>`;
+    storeIds.forEach((sid) => {
+      const st = line.stores.find((x) => x.storeId === sid);
+      html += st
+        ? `<td class="${st.cost === minCost ? 'min-price' : ''}">${rub(st.cost)}</td>`
+        : `<td class="na">—</td>`;
+    });
+    const chosen = choices[line.productId] || '';
+    html += `<td class="col-pick"><select data-pick="${line.productId}">
+        ${line.stores.map((s) => `<option value="${s.storeId}" ${chosen === s.storeId ? 'selected' : ''}>${esc(s.storeName)}</option>`).join('')}
+      </select></td></tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+
+  // заголовок «всего» по магазинам внизу таблицы (для полноты)
+  wrap.querySelectorAll('[data-pick]').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      choices[sel.dataset.pick] = sel.value;
+      renderShopping();
+    });
+  });
+
+  document.getElementById('btn-choose-cheapest').onclick = () => {
+    applyChoicesCheapest(shoppingList, totals);
+    renderShopping();
+  };
+  document.getElementById('btn-copy').onclick = () => copyShoppingList(shoppingList, choices, mixed, week, totals);
+  document.getElementById('btn-print').onclick = () => window.print();
+}
+
+function applyChoicesCheapest(shoppingList, totals) {
+  choices = {};
+  shoppingList.forEach((line) => {
+    if (!line.stores.length) return;
+    const min = line.stores.reduce((a, b) => (b.cost < a.cost ? b : a));
+    choices[line.productId] = min.storeId;
+  });
+}
+
+function copyShoppingList(shoppingList, choices, mixed, week, totals) {
+  const lines = [];
+  lines.push('Список покупок на день · ' + new Date().toLocaleDateString('ru-RU'));
+  lines.push('Оптимальная корзина: ' + rub(mixed.cost) + ' (неделя ~ ' + rub(week.weekCost) + ')');
+  lines.push('');
+  let cat = '';
+  shoppingList.forEach((line) => {
+    if (line.cat !== cat) { cat = line.cat; lines.push('— ' + cat + ' —'); }
+    const st = line.stores.find((x) => x.storeId === choices[line.productId]);
+    const amount = line.amountUnit === 'шт' ? fmt(line.amount) + ' шт' : fmt(line.amount) + ' кг';
+    lines.push(`${line.name}: ${amount} · ${st ? st.storeName + ' ' + rub(st.cost) : 'нет в выбранных магазинах'}`);
+  });
+  lines.push('');
+  totals.forEach((t) => lines.push(`${t.name}: ${rub(t.cost)} (★${t.avgRating})`));
+  copyText(lines.join('\n'));
+}
+
+function copyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+/* ---------- init ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  setupTabs();
+  renderFamily();
+  renderFilters();
+  renderMenu();
+  renderShopping();
+});
+</script>
+</body>
+</html>

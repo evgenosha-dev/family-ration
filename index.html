@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Семейный рацион — сбалансированное меню и цены в магазинах</title>
+  <meta name="description" content="Составление сбалансированного рациона на семью из трёх человек: фильтры, настройки, сравнение цен и отзывов продуктовых магазинов.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>🥗 Семейный рацион</h1>
+      <p class="tagline">Сбалансированное меню на троих — девушка, парень и малыш 2 лет. Фильтры, бюджет и сравнение цен в продуктовых магазинах.</p>
+    </div>
+  </header>
+
+  <nav class="tabs container">
+    <button class="tab-btn active" data-tab="family">👨‍👩‍👦 Семья</button>
+    <button class="tab-btn" data-tab="menu">🍽 Меню на день</button>
+    <button class="tab-btn" data-tab="shopping">🛒 Магазины и цены</button>
+  </nav>
+
+  <main class="container">
+    <!-- СЕМЬЯ -->
+    <section id="tab-family" class="tab active">
+      <p class="hint">Настройте параметры каждого члена семьи — нормы калорий и БЖУ пересчитаются автоматически по формуле Миффлина — Сан Жеора.</p>
+      <div id="family-cards" class="family-grid"></div>
+      <div id="family-totals" class="family-totals"></div>
+    </section>
+
+    <!-- МЕНЮ -->
+    <section id="tab-menu" class="tab">
+      <div class="filters-panel">
+        <div class="filter-block">
+          <h3>Стиль питания</h3>
+          <div id="filter-diet" class="radio-group"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Для ребёнка</h3>
+          <div id="filter-kid"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Кухня</h3>
+          <div id="filter-cuisine" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Исключить (аллергии / непереносимость)</h3>
+          <div id="filter-allergens" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Магазины для сравнения</h3>
+          <div id="filter-stores" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Бюджет на неделю</h3>
+          <div class="budget-row">
+            <input type="range" id="budget-range" min="1000" max="15000" step="100">
+            <span id="budget-value" class="budget-value"></span>
+          </div>
+        </div>
+        <button id="btn-generate" class="btn primary big">Сгенерировать меню на день</button>
+      </div>
+
+      <div id="menu-nutrition-summary" class="summary"></div>
+      <div id="menu-slots" class="menu-grid"></div>
+    </section>
+
+    <!-- МАГАЗИНЫ -->
+    <section id="tab-shopping" class="tab">
+      <div id="store-summary" class="store-summary"></div>
+      <div id="budget-box" class="budget-box"></div>
+      <div id="mixed-total" class="mixed-total"></div>
+      <div class="shop-actions">
+        <button id="btn-choose-cheapest" class="btn">Дешевле всего по каждому продукту</button>
+        <button id="btn-copy" class="btn">Копировать список</button>
+        <button id="btn-print" class="btn">Печать</button>
+      </div>
+      <div id="shopping-table"></div>
+      <p class="hint">Цены и рейтинги — ориентировочные и редактируются в файле js/data.js. Жёлтым подсвечена минимальная цена на продукт среди выбранных магазинов.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <details class="publish-guide">
+        <summary>Как бесплатно опубликовать сайт на GitHub Pages</summary>
+        <ol>
+          <li>Зарегистрируйтесь на <a href="https://github.com" target="_blank" rel="noopener">github.com</a> и создайте репозиторий (зелёная кнопка <b>New</b>), имя любое, например <code>family-ration</code>.</li>
+          <li>Загрузите файлы проекта: на странице репозитория нажмите <b>Add file → Upload files</b> и перетащите все файлы и папки <code>family-ration</code> (index.html, css, js, README.md, .nojekyll, .github).</li>
+          <li>Нажмите <b>Commit changes</b>.</li>
+          <li>Откройте <b>Settings → Pages</b> (пункт в меню слева). В разделе <b>Branch</b> выберите ветку <code>main</code>, папку <code>/ (root)</code> и нажмите <b>Save</b>.</li>
+          <li>Через 1–2 минуты сайт будет доступен по адресу <code>https://ваш-логин.github.io/family-ration/</code>.</li>
+        </ol>
+        <p class="hint">В папке проекта уже лежит готовый GitHub Action (папка .github/workflows) — с ним публикация происходит автоматически при каждом «пуше».</p>
+      </details>
+      <p class="copyright">Семейный рацион · сделано для публикации на GitHub Pages</p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/nutrition.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/shopping.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Семейный рацион: конструктор — соберите меню сами</title>
+  <meta name="description" content="Вариант сайта: ручной конструктор сбалансированного меню с живым расчётом БЖУ и ценой корзины по магазинам.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>🥗 Семейный рацион: конструктор</h1>
+      <p class="tagline">Собирайте меню на троих своими руками: выбор блюда в каждый приём пищи, живой расчёт калорий и БЖУ, цена корзины в магазинах.</p>
+    </div>
+  </header>
+
+  <nav class="tabs container">
+    <button class="tab-btn active" data-tab="builder">🧩 Конструктор</button>
+    <button class="tab-btn" data-tab="shopping">🛒 Магазины и цены</button>
+    <button class="tab-btn" data-tab="family">👨‍👩‍👦 Семья</button>
+  </nav>
+
+  <main class="container">
+    <section id="tab-builder" class="tab active">
+      <div class="filters-panel">
+        <div class="filter-block">
+          <h3>Стиль питания</h3>
+          <div id="filter-diet" class="radio-group"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Для ребёнка</h3>
+          <div id="filter-kid"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Кухня</h3>
+          <div id="filter-cuisine" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Исключить (аллергии / непереносимость)</h3>
+          <div id="filter-allergens" class="chips"></div>
+        </div>
+        <div class="filter-block">
+          <h3>Магазины для сравнения</h3>
+          <div id="filter-stores" class="chips"></div>
+        </div>
+      </div>
+
+      <div id="slot-tabs" class="day-tabs"></div>
+      <div id="day-totals" class="summary"></div>
+      <div class="shop-actions">
+        <button id="btn-fill-random" class="btn">Заполнить пустые слоты случайно</button>
+        <button id="btn-clear" class="btn">Очистить день</button>
+      </div>
+      <div id="recipe-catalog"></div>
+    </section>
+
+    <section id="tab-shopping" class="tab">
+      <div id="store-summary" class="store-summary"></div>
+      <div id="mixed-total" class="mixed-total"></div>
+      <div class="shop-actions">
+        <button id="btn-copy" class="btn">Копировать список</button>
+        <button id="btn-print" class="btn">Печать</button>
+      </div>
+      <div id="shopping-table"></div>
+      <p class="hint">Цены и рейтинги — ориентировочные и редактируются в js/data.js. Жёлтым подсвечена минимальная цена продукта среди выбранных магазинов.</p>
+    </section>
+
+    <section id="tab-family" class="tab">
+      <div class="filters-panel">
+        <p class="hint">При изменении параметров нормы калорий пересчитаются, а выбранные блюда будут перемасштабированы под новую цель.</p>
+        <div id="family-cards" class="family-grid"></div>
+        <div id="family-totals" class="family-totals"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p class="copyright">Семейный рацион · вариант «конструктор» · публикуется на GitHub Pages</p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/nutrition.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/shopping.js"></script>
+  <script src="js/builder.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
