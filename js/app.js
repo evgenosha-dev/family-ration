@@ -308,11 +308,14 @@ function renderMenu() {
     card.className = 'meal-card';
     if (!s || !s.recipe) {
       card.innerHTML = `
-        <div class="meal-head"><strong>${SLOT_LABELS[slotDef]}</strong></div>
-        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры или выберите ниже:</div>
-        <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
-          ${mealOptions(slotDef, '')}
-        </select>`;
+        <div class="meal-head">
+          <strong>${SLOT_LABELS[slotDef]}</strong>
+          <span class="meal-head-actions">
+            <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${mealOptions(slotDef, '')}</select>
+            <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+          </span>
+        </div>
+        <div class="meal-empty">Нет подходящих блюд по фильтрам — выберите вручную</div>`;
       wrap.appendChild(card);
       return;
     }
@@ -325,13 +328,13 @@ function renderMenu() {
     card.innerHTML = `
       <div class="meal-head">
         <strong>${SLOT_LABELS[slotDef]}</strong>
-        <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+        <span class="meal-head-actions">
+          <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${options}</select>
+          <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+        </span>
       </div>
       <div class="meal-name">${esc(r.name)}</div>
       <div class="meal-meta">${esc(r.cuisine)}${tags.length ? ' · ' + tags.map((t) => `<span class="tag">${t}</span>`).join(' ') : ''}</div>
-      <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
-        ${options}
-      </select>
       <div class="meal-nutrients">
         <span><b>${fmt(s.kcal)}</b> ккал</span>
         <span>Б ${fmt(s.protein)} г</span>
@@ -352,7 +355,9 @@ function renderMenu() {
 
   wrap.querySelectorAll('[data-pick]').forEach((sel) => {
     sel.addEventListener('change', () => {
-      if (sel.value) setSlotRecipe(sel.dataset.pick, sel.value);
+      const v = sel.value;
+      sel.value = '';
+      if (v) setSlotRecipe(sel.dataset.pick, v);
     });
   });
 }
@@ -363,7 +368,7 @@ function mealOptions(slotDef, currentId) {
   const list = filterRecipes(state.filters).filter((r) => r.meal === mealType);
   const hasCurrent = list.some((r) => r.id === currentId);
   const cur = getRecipeNutrition(currentId);
-  let html = `<option value="">— выбрать из списка —</option>`;
+  let html = `<option value="">▾ выбрать</option>`;
   if (!hasCurrent && cur) {
     html += `<option value="${cur.id}" selected>${esc(cur.name)} (${fmt(cur.kcal)} ккал)</option>`;
   }
@@ -431,8 +436,9 @@ function renderShopping() {
     if (isCheapest) badges.push('<span class="badge good">дешевле всего</span>');
     if (isBestReview) badges.push('<span class="badge review">лучшие отзывы</span>');
     if (t.missing) badges.push(`<span class="badge warn">нет ${t.missing} поз.</span>`);
+    const tStore = STORES.find((s) => s.id === t.storeId);
     return `<div class="store-card">
-      <div class="store-name" style="--sc:${t.color}">${esc(t.name)}</div>
+      <div class="store-name" style="--sc:${t.color}"><a href="${tStore?.url || '#'}" target="_blank" rel="noopener" title="Открыть сайт ${esc(t.name)}">${esc(t.name)}</a> ↗</div>
       <div class="store-cost">${rub(t.cost)}</div>
       <div class="store-sub">★ ${t.avgRating} / 5 · ${t.available} поз.</div>
       <div class="store-badges">${badges.join('')}</div>
@@ -462,7 +468,8 @@ function renderShopping() {
     <th>Продукт</th><th>Кол-во</th>`;
   storeIds.forEach((sid) => {
     const st = totals.find((x) => x.storeId === sid);
-    html += `<th style="--sc:${st.color}">${esc(st.name)}<span class="th-sub">★${st.avgRating}</span></th>`;
+    const stUrl = STORES.find((s) => s.id === sid)?.url;
+    html += `<th style="--sc:${st.color}"><a href="${stUrl || '#'}" target="_blank" rel="noopener" title="Открыть сайт ${esc(st.name)}">${esc(st.name)}</a><span class="th-sub">★${st.avgRating}</span></th>`;
   });
   html += `<th class="col-pick">Выбор</th></tr></thead><tbody>`;
 
@@ -480,7 +487,7 @@ function renderShopping() {
     storeIds.forEach((sid) => {
       const st = line.stores.find((x) => x.storeId === sid);
       html += st
-        ? `<td class="${st.cost === minCost ? 'min-price' : ''}">${rub(st.cost)}</td>`
+        ? `<td class="${st.cost === minCost ? 'min-price' : ''}"><a class="price-link" href="${storeSearchUrl(sid, line.name)}" target="_blank" rel="noopener" title="Найти «${esc(line.name)}» на сайте ${line.stores.find((x) => x.storeId === sid)?.storeName}">${rub(st.cost)}</a></td>`
         : `<td class="na">—</td>`;
     });
     const chosen = choices[line.productId] || '';

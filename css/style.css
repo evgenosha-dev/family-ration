@@ -208,18 +208,12 @@ body {
 
 /* ---------- footer ---------- */
 footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40px; }
-.publish-guide { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
-.publish-guide summary { cursor: pointer; font-weight: 700; font-size: 15px; }
-.publish-guide ol { margin: 12px 0 4px; padding-left: 20px; font-size: 14px; }
-.publish-guide li { margin-bottom: 8px; }
-.publish-guide code { background: #f1f0ea; border-radius: 5px; padding: 1px 6px; font-size: 13px; }
-.publish-guide a { color: var(--accent-dark); }
 .copyright { color: var(--muted); font-size: 12.5px; text-align: center; }
 
 /* ---------- print ---------- */
 @media print {
   body { background: #fff; }
-  .site-header, .tabs, .filters-panel, .shop-actions, footer .publish-guide, .tab-btn { display: none; }
+  .site-header, .tabs, .filters-panel, .shop-actions, .tab-btn { display: none; }
   .tab { display: block !important; }
   .tab:not(#tab-shopping) { display: none !important; }
   .card, .summary, .budget-box, .mixed-total, .shop-table { box-shadow: none; border-color: #ccc; }
@@ -252,12 +246,23 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
   background: #fff; cursor: pointer; font-weight: 600;
 }
 
-/* ---------- meal dropdown ---------- */
-.meal-select {
-  width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
-  font-size: 13.5px; background: #fff; color: var(--ink); cursor: pointer; margin: 2px 0 6px;
+/* ---------- meal pick button (рядом с ⟳) ---------- */
+.meal-head { display: flex; align-items: center; gap: 6px; }
+.meal-head-actions { display: inline-flex; align-items: center; gap: 6px; }
+.meal-pick-btn {
+  appearance: none; -webkit-appearance: none; max-width: 120px;
+  padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; background: #fff; color: var(--muted); cursor: pointer;
 }
-.meal-select:hover { border-color: var(--accent); }
+.meal-pick-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+
+/* ---------- ссылки на магазины в таблице цен ---------- */
+.price-link { color: inherit; text-decoration: none; }
+.price-link:hover { text-decoration: underline; color: var(--accent); }
+.store-card .store-name a { color: inherit; text-decoration: none; }
+.store-card .store-name a:hover { text-decoration: underline; }
+.shop-table th a { color: inherit; text-decoration: none; }
+.shop-table th a:hover { text-decoration: underline; }
 
 @media (max-width: 640px) {
   .grid3 { grid-template-columns: 1fr; }

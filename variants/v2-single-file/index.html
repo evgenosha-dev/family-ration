@@ -216,18 +216,12 @@ body {
 
 /* ---------- footer ---------- */
 footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40px; }
-.publish-guide { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
-.publish-guide summary { cursor: pointer; font-weight: 700; font-size: 15px; }
-.publish-guide ol { margin: 12px 0 4px; padding-left: 20px; font-size: 14px; }
-.publish-guide li { margin-bottom: 8px; }
-.publish-guide code { background: #f1f0ea; border-radius: 5px; padding: 1px 6px; font-size: 13px; }
-.publish-guide a { color: var(--accent-dark); }
 .copyright { color: var(--muted); font-size: 12.5px; text-align: center; }
 
 /* ---------- print ---------- */
 @media print {
   body { background: #fff; }
-  .site-header, .tabs, .filters-panel, .shop-actions, footer .publish-guide, .tab-btn { display: none; }
+  .site-header, .tabs, .filters-panel, .shop-actions, .tab-btn { display: none; }
   .tab { display: block !important; }
   .tab:not(#tab-shopping) { display: none !important; }
   .card, .summary, .budget-box, .mixed-total, .shop-table { box-shadow: none; border-color: #ccc; }
@@ -260,12 +254,23 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
   background: #fff; cursor: pointer; font-weight: 600;
 }
 
-/* ---------- meal dropdown ---------- */
-.meal-select {
-  width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
-  font-size: 13.5px; background: #fff; color: var(--ink); cursor: pointer; margin: 2px 0 6px;
+/* ---------- meal pick button (рядом с ⟳) ---------- */
+.meal-head { display: flex; align-items: center; gap: 6px; }
+.meal-head-actions { display: inline-flex; align-items: center; gap: 6px; }
+.meal-pick-btn {
+  appearance: none; -webkit-appearance: none; max-width: 120px;
+  padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; background: #fff; color: var(--muted); cursor: pointer;
 }
-.meal-select:hover { border-color: var(--accent); }
+.meal-pick-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+
+/* ---------- ссылки на магазины в таблице цен ---------- */
+.price-link { color: inherit; text-decoration: none; }
+.price-link:hover { text-decoration: underline; color: var(--accent); }
+.store-card .store-name a { color: inherit; text-decoration: none; }
+.store-card .store-name a:hover { text-decoration: underline; }
+.shop-table th a { color: inherit; text-decoration: none; }
+.shop-table th a:hover { text-decoration: underline; }
 
 @media (max-width: 640px) {
   .grid3 { grid-template-columns: 1fr; }
@@ -398,24 +403,13 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
         <button id="btn-print" class="btn">Печать</button>
       </div>
       <div id="shopping-table"></div>
-      <p class="hint">Цены и рейтинги — ориентировочные и редактируются в файле js/data.js. Жёлтым подсвечена минимальная цена на продукт среди выбранных магазинов.</p>
+      <p class="hint">Цены и рейтинги — ориентировочные и редактируются в файле js/data.js. Жёлтым подсвечена минимальная цена на продукт среди выбранных магазинов. Клик по цене или названию магазина откроет каталог этого магазина с поиском продукта — там видна реальная цена вашего региона.</p>
     </section>
   </main>
 
   <footer>
     <div class="container">
-      <details class="publish-guide">
-        <summary>Как бесплатно опубликовать сайт на GitHub Pages</summary>
-        <ol>
-          <li>Зарегистрируйтесь на <a href="https://github.com" target="_blank" rel="noopener">github.com</a> и создайте репозиторий (зелёная кнопка <b>New</b>), имя любое, например <code>family-ration</code>.</li>
-          <li>Загрузите файлы проекта: на странице репозитория нажмите <b>Add file → Upload files</b> и перетащите все файлы и папки <code>family-ration</code> (index.html, css, js, README.md, .nojekyll, .github).</li>
-          <li>Нажмите <b>Commit changes</b>.</li>
-          <li>Откройте <b>Settings → Pages</b> (пункт в меню слева). В разделе <b>Branch</b> выберите ветку <code>main</code>, папку <code>/ (root)</code> и нажмите <b>Save</b>.</li>
-          <li>Через 1–2 минуты сайт будет доступен по адресу <code>https://ваш-логин.github.io/family-ration/</code>.</li>
-        </ol>
-        <p class="hint">В папке проекта уже лежит готовый GitHub Action (папка .github/workflows) — с ним публикация происходит автоматически при каждом «пуше».</p>
-      </details>
-      <p class="copyright">Семейный рацион · сделано для публикации на GitHub Pages</p>
+      <p class="copyright">Семейный рацион · сбалансированное меню на троих и сравнение цен в магазинах</p>
     </div>
   </footer>
 
@@ -427,13 +421,28 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
    ============================================================ */
 
 const STORES = [
-  { id: 'pyat',   name: 'Пятёрочка',     color: '#e63329', rating: 3.9 },
-  { id: 'magnit', name: 'Магнит',        color: '#dc1f26', rating: 3.7 },
-  { id: 'vv',     name: 'ВкусВилл',      color: '#00a650', rating: 4.7 },
-  { id: 'lenta',  name: 'Лента',         color: '#005ca9', rating: 4.1 },
-  { id: 'ozon',   name: 'Ozon',          color: '#3b82f6', rating: 4.3 },
-  { id: 'lavka',  name: 'Яндекс Лавка',  color: '#fc3f1d', rating: 4.5 },
+  { id: 'pyat',   name: 'Пятёрочка',     color: '#e63329', rating: 3.9, url: 'https://perekrestok.ru/vprok',
+    search: 'https://perekrestok.ru/vprok/catalog/search?text={q}' },
+  { id: 'magnit', name: 'Магнит',        color: '#dc1f26', rating: 3.7, url: 'https://www.magnit.ru/',
+    search: 'https://www.magnit.ru/catalog/?q={q}' },
+  { id: 'vv',     name: 'ВкусВилл',      color: '#00a650', rating: 4.7, url: 'https://vkusvill.ru/',
+    search: 'https://vkusvill.ru/goods/?q={q}' },
+  { id: 'lenta',  name: 'Лента',         color: '#005ca9', rating: 4.1, url: 'https://lenta.com/',
+    search: 'https://lenta.com/search?query={q}' },
+  { id: 'ozon',   name: 'Ozon',          color: '#3b82f6', rating: 4.3, url: 'https://www.ozon.ru/',
+    search: 'https://www.ozon.ru/search/?text={q}' },
+  { id: 'lavka',  name: 'Яндекс Лавка',  color: '#fc3f1d', rating: 4.5, url: 'https://lavka.yandex.ru/',
+    search: 'https://lavka.yandex.ru/?text={q}' },
 ];
+
+/* Ссылка на товар в конкретном магазине (поиск по названию продукта).
+   Шаблоны поиска правятся выше в STORES — под свой регион/доставку. */
+function storeSearchUrl(storeId, productName) {
+  const store = STORES.find((s) => s.id === storeId);
+  if (!store) return '#';
+  const tpl = store.search || store.url;
+  return tpl.replace('{q}', encodeURIComponent(productName));
+}
 
 /* Множитель цены по магазину для «обычных» продуктов.
    Отдельные продукты могут иметь свою цену в поле multOverride. */
@@ -1402,11 +1411,14 @@ function renderMenu() {
     card.className = 'meal-card';
     if (!s || !s.recipe) {
       card.innerHTML = `
-        <div class="meal-head"><strong>${SLOT_LABELS[slotDef]}</strong></div>
-        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры или выберите ниже:</div>
-        <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
-          ${mealOptions(slotDef, '')}
-        </select>`;
+        <div class="meal-head">
+          <strong>${SLOT_LABELS[slotDef]}</strong>
+          <span class="meal-head-actions">
+            <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${mealOptions(slotDef, '')}</select>
+            <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+          </span>
+        </div>
+        <div class="meal-empty">Нет подходящих блюд по фильтрам — выберите вручную</div>`;
       wrap.appendChild(card);
       return;
     }
@@ -1419,13 +1431,13 @@ function renderMenu() {
     card.innerHTML = `
       <div class="meal-head">
         <strong>${SLOT_LABELS[slotDef]}</strong>
-        <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+        <span class="meal-head-actions">
+          <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${options}</select>
+          <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
+        </span>
       </div>
       <div class="meal-name">${esc(r.name)}</div>
       <div class="meal-meta">${esc(r.cuisine)}${tags.length ? ' · ' + tags.map((t) => `<span class="tag">${t}</span>`).join(' ') : ''}</div>
-      <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
-        ${options}
-      </select>
       <div class="meal-nutrients">
         <span><b>${fmt(s.kcal)}</b> ккал</span>
         <span>Б ${fmt(s.protein)} г</span>
@@ -1446,7 +1458,9 @@ function renderMenu() {
 
   wrap.querySelectorAll('[data-pick]').forEach((sel) => {
     sel.addEventListener('change', () => {
-      if (sel.value) setSlotRecipe(sel.dataset.pick, sel.value);
+      const v = sel.value;
+      sel.value = '';
+      if (v) setSlotRecipe(sel.dataset.pick, v);
     });
   });
 }
@@ -1457,7 +1471,7 @@ function mealOptions(slotDef, currentId) {
   const list = filterRecipes(state.filters).filter((r) => r.meal === mealType);
   const hasCurrent = list.some((r) => r.id === currentId);
   const cur = getRecipeNutrition(currentId);
-  let html = `<option value="">— выбрать из списка —</option>`;
+  let html = `<option value="">▾ выбрать</option>`;
   if (!hasCurrent && cur) {
     html += `<option value="${cur.id}" selected>${esc(cur.name)} (${fmt(cur.kcal)} ккал)</option>`;
   }
@@ -1525,8 +1539,9 @@ function renderShopping() {
     if (isCheapest) badges.push('<span class="badge good">дешевле всего</span>');
     if (isBestReview) badges.push('<span class="badge review">лучшие отзывы</span>');
     if (t.missing) badges.push(`<span class="badge warn">нет ${t.missing} поз.</span>`);
+    const tStore = STORES.find((s) => s.id === t.storeId);
     return `<div class="store-card">
-      <div class="store-name" style="--sc:${t.color}">${esc(t.name)}</div>
+      <div class="store-name" style="--sc:${t.color}"><a href="${tStore?.url || '#'}" target="_blank" rel="noopener" title="Открыть сайт ${esc(t.name)}">${esc(t.name)}</a> ↗</div>
       <div class="store-cost">${rub(t.cost)}</div>
       <div class="store-sub">★ ${t.avgRating} / 5 · ${t.available} поз.</div>
       <div class="store-badges">${badges.join('')}</div>
@@ -1556,7 +1571,8 @@ function renderShopping() {
     <th>Продукт</th><th>Кол-во</th>`;
   storeIds.forEach((sid) => {
     const st = totals.find((x) => x.storeId === sid);
-    html += `<th style="--sc:${st.color}">${esc(st.name)}<span class="th-sub">★${st.avgRating}</span></th>`;
+    const stUrl = STORES.find((s) => s.id === sid)?.url;
+    html += `<th style="--sc:${st.color}"><a href="${stUrl || '#'}" target="_blank" rel="noopener" title="Открыть сайт ${esc(st.name)}">${esc(st.name)}</a><span class="th-sub">★${st.avgRating}</span></th>`;
   });
   html += `<th class="col-pick">Выбор</th></tr></thead><tbody>`;
 
@@ -1574,7 +1590,7 @@ function renderShopping() {
     storeIds.forEach((sid) => {
       const st = line.stores.find((x) => x.storeId === sid);
       html += st
-        ? `<td class="${st.cost === minCost ? 'min-price' : ''}">${rub(st.cost)}</td>`
+        ? `<td class="${st.cost === minCost ? 'min-price' : ''}"><a class="price-link" href="${storeSearchUrl(sid, line.name)}" target="_blank" rel="noopener" title="Найти «${esc(line.name)}» на сайте ${line.stores.find((x) => x.storeId === sid)?.storeName}">${rub(st.cost)}</a></td>`
         : `<td class="na">—</td>`;
     });
     const chosen = choices[line.productId] || '';

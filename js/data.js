@@ -5,13 +5,28 @@
    ============================================================ */
 
 const STORES = [
-  { id: 'pyat',   name: 'Пятёрочка',     color: '#e63329', rating: 3.9 },
-  { id: 'magnit', name: 'Магнит',        color: '#dc1f26', rating: 3.7 },
-  { id: 'vv',     name: 'ВкусВилл',      color: '#00a650', rating: 4.7 },
-  { id: 'lenta',  name: 'Лента',         color: '#005ca9', rating: 4.1 },
-  { id: 'ozon',   name: 'Ozon',          color: '#3b82f6', rating: 4.3 },
-  { id: 'lavka',  name: 'Яндекс Лавка',  color: '#fc3f1d', rating: 4.5 },
+  { id: 'pyat',   name: 'Пятёрочка',     color: '#e63329', rating: 3.9, url: 'https://perekrestok.ru/vprok',
+    search: 'https://perekrestok.ru/vprok/catalog/search?text={q}' },
+  { id: 'magnit', name: 'Магнит',        color: '#dc1f26', rating: 3.7, url: 'https://www.magnit.ru/',
+    search: 'https://www.magnit.ru/catalog/?q={q}' },
+  { id: 'vv',     name: 'ВкусВилл',      color: '#00a650', rating: 4.7, url: 'https://vkusvill.ru/',
+    search: 'https://vkusvill.ru/goods/?q={q}' },
+  { id: 'lenta',  name: 'Лента',         color: '#005ca9', rating: 4.1, url: 'https://lenta.com/',
+    search: 'https://lenta.com/search?query={q}' },
+  { id: 'ozon',   name: 'Ozon',          color: '#3b82f6', rating: 4.3, url: 'https://www.ozon.ru/',
+    search: 'https://www.ozon.ru/search/?text={q}' },
+  { id: 'lavka',  name: 'Яндекс Лавка',  color: '#fc3f1d', rating: 4.5, url: 'https://lavka.yandex.ru/',
+    search: 'https://lavka.yandex.ru/?text={q}' },
 ];
+
+/* Ссылка на товар в конкретном магазине (поиск по названию продукта).
+   Шаблоны поиска правятся выше в STORES — под свой регион/доставку. */
+function storeSearchUrl(storeId, productName) {
+  const store = STORES.find((s) => s.id === storeId);
+  if (!store) return '#';
+  const tpl = store.search || store.url;
+  return tpl.replace('{q}', encodeURIComponent(productName));
+}
 
 /* Множитель цены по магазину для «обычных» продуктов.
    Отдельные продукты могут иметь свою цену в поле multOverride. */
