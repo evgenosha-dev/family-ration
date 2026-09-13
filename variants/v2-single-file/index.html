@@ -241,6 +241,36 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
   .shop-table th, .shop-table td { padding: 7px 8px; }
   .site-header h1 { font-size: 23px; }
 }
+/* ---------- add/remove family members ---------- */
+.head-right { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.family-actions { margin-top: 14px; }
+.add-person-form {
+  margin-top: 14px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px; box-shadow: var(--shadow);
+}
+.add-person-form h3 { margin: 0 0 12px; font-size: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.form-actions { display: flex; gap: 10px; margin-top: 14px; }
+.hidden { display: none !important; }
+
+/* ---------- generate row & presets ---------- */
+.generate-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.preset-select {
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14.5px;
+  background: #fff; cursor: pointer; font-weight: 600;
+}
+
+/* ---------- meal dropdown ---------- */
+.meal-select {
+  width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 13.5px; background: #fff; color: var(--ink); cursor: pointer; margin: 2px 0 6px;
+}
+.meal-select:hover { border-color: var(--accent); }
+
+@media (max-width: 640px) {
+  .grid3 { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -263,6 +293,51 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
       <p class="hint">Настройте параметры каждого члена семьи — нормы калорий и БЖУ пересчитаются автоматически по формуле Миффлина — Сан Жеора.</p>
       <div id="family-cards" class="family-grid"></div>
       <div id="family-totals" class="family-totals"></div>
+      <div class="family-actions">
+        <button id="btn-add-person" class="btn">Добавить члена семьи</button>
+      </div>
+      <form id="add-person-form" class="add-person-form hidden">
+        <h3>Новый член семьи</h3>
+        <div class="grid2">
+          <label>Кто это (роль)
+            <input type="text" id="np-role" placeholder="Например: бабушка" required>
+          </label>
+          <label>Пол
+            <select id="np-sex">
+              <option value="f">Женский</option>
+              <option value="m">Мужской</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid3">
+          <label>Возраст
+            <input type="number" id="np-age" min="0" max="99" value="30">
+          </label>
+          <label>Вес, кг
+            <input type="number" id="np-weight" min="1" max="300" step="0.5" value="65">
+          </label>
+          <label>Рост, см
+            <input type="number" id="np-height" min="50" max="230" value="170">
+          </label>
+        </div>
+        <div class="grid2">
+          <label>Активность
+            <select id="np-activity">
+              <option value="1.2">Низкая</option>
+              <option value="1.375" selected>Средняя</option>
+              <option value="1.55">Высокая</option>
+              <option value="1.725">Очень высокая</option>
+            </select>
+          </label>
+          <label class="checkbox" style="align-self:end; padding-bottom:10px;">
+            <input type="checkbox" id="np-child"> Ребёнок до 3 лет (особый расчёт)
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Добавить</button>
+          <button type="button" id="btn-cancel-add" class="btn">Отмена</button>
+        </div>
+      </form>
     </section>
 
     <!-- МЕНЮ -->
@@ -295,7 +370,17 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
             <span id="budget-value" class="budget-value"></span>
           </div>
         </div>
-        <button id="btn-generate" class="btn primary big">Сгенерировать меню на день</button>
+        <div class="generate-row">
+          <button id="btn-generate" class="btn primary" title="Пересобрать меню по текущим фильтрам">Сгенерировать меню на день</button>
+          <select id="preset-select" class="preset-select" title="Быстрый шаблон рациона">
+            <option value="">Шаблон дня…</option>
+            <option value="normal">Обычный день</option>
+            <option value="vegetarian">Вегетарианский</option>
+            <option value="vegan">Веганский</option>
+            <option value="kid">Детские блюда</option>
+            <option value="gf-lf">Без глютена и лактозы</option>
+          </select>
+        </div>
       </div>
 
       <div id="menu-nutrition-summary" class="summary"></div>
@@ -1072,8 +1157,10 @@ function renderFamily() {
     card.className = 'person-card';
     card.innerHTML = `
       <div class="person-head">
-        <strong>${esc(p.role)}</strong>
-        ${p.isChild ? '<span class="badge kid">ребёнок</span>' : ''}
+        <strong>${esc(p.role)}</strong><span class="head-right">
+          ${p.isChild ? '<span class="badge kid">ребёнок</span>' : ''}
+          <button class="icon-btn person-remove" data-remove="${p.id}" title="Удалить">✕</button>
+        </span>
       </div>
       <label>Пол
         <select data-field="sex" ${p.isChild ? 'disabled' : ''}>
@@ -1120,7 +1207,63 @@ function renderFamily() {
     });
     wrap.appendChild(card);
   });
+
+  wrap.querySelectorAll('.person-remove').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.remove;
+      if (state.family.length <= 1) return;
+      if (!confirm('Удалить «' + state.family.find((p) => p.id === id)?.role + '» из рациона?')) return;
+      const idx = state.family.findIndex((p) => p.id === id);
+      if (idx >= 0) state.family.splice(idx, 1);
+      familyTargets = calcFamilyTargets(state.family);
+      saveState();
+      renderFamily();
+      menu = generateMenu(state.filters, familyTargets.totals.kcal);
+      choices = {};
+      renderMenu();
+      renderShopping();
+    });
+  });
+
+  setupAddPersonForm();
   renderFamilyTargets();
+}
+
+function setupAddPersonForm() {
+  const form = document.getElementById('add-person-form');
+  const btnAdd = document.getElementById('btn-add-person');
+  const btnCancel = document.getElementById('btn-cancel-add');
+  if (!form || !btnAdd) return;
+  btnAdd.addEventListener('click', () => {
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) document.getElementById('np-role').focus();
+  });
+  btnCancel.addEventListener('click', () => form.classList.add('hidden'));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const role = document.getElementById('np-role').value.trim();
+    if (!role) return;
+    const person = {
+      id: 'p' + Date.now(),
+      role,
+      sex: document.getElementById('np-sex').value,
+      age: parseInt(document.getElementById('np-age').value, 10) || 30,
+      weight: parseFloat(document.getElementById('np-weight').value) || 65,
+      height: parseFloat(document.getElementById('np-height').value) || 170,
+      activityMult: parseFloat(document.getElementById('np-activity').value) || 1.375,
+      isChild: document.getElementById('np-child').checked,
+    };
+    state.family.push(person);
+    familyTargets = calcFamilyTargets(state.family);
+    saveState();
+    form.classList.add('hidden');
+    document.getElementById('np-role').value = '';
+    renderFamily();
+    menu = generateMenu(state.filters, familyTargets.totals.kcal);
+    choices = {};
+    renderMenu();
+    renderShopping();
+  });
 }
 
 function renderFamilyTargets() {
@@ -1192,7 +1335,38 @@ function renderFilters() {
     renderShopping();
   });
 
-  document.getElementById('btn-generate').addEventListener('click', () => { menu = generateMenu(state.filters, familyTargets.totals.kcal); renderMenu(); renderShopping(); });
+  document.getElementById('btn-generate').onclick = () => { menu = generateMenu(state.filters, familyTargets.totals.kcal); renderMenu(); renderShopping(); };
+
+  const presetSel = document.getElementById('preset-select');
+  if (presetSel) {
+    presetSel.onchange = () => {
+      if (!presetSel.value) return;
+      applyPreset(presetSel.value);
+      presetSel.value = '';
+    };
+  }
+}
+
+/* Быстрые шаблоны рациона на день */
+function applyPreset(id) {
+  const f = state.filters;
+  if (id === 'normal') {
+    f.diet = 'any'; f.kidOnly = false; f.excludeAllergens = [];
+  } else if (id === 'vegetarian') {
+    f.diet = 'vegetarian'; f.kidOnly = false; f.excludeAllergens = [];
+  } else if (id === 'vegan') {
+    f.diet = 'vegan'; f.kidOnly = false; f.excludeAllergens = [];
+  } else if (id === 'kid') {
+    f.diet = 'any'; f.kidOnly = true; f.excludeAllergens = [];
+  } else if (id === 'gf-lf') {
+    f.diet = 'any'; f.kidOnly = false; f.excludeAllergens = ['глютен', 'лактоза'];
+  }
+  saveState();
+  renderFilters();          // перерисовать галочки фильтров под шаблон
+  menu = generateMenu(state.filters, familyTargets.totals.kcal);
+  choices = {};
+  renderMenu();
+  renderShopping();
 }
 
 function onFilterChange() {
@@ -1229,7 +1403,10 @@ function renderMenu() {
     if (!s || !s.recipe) {
       card.innerHTML = `
         <div class="meal-head"><strong>${SLOT_LABELS[slotDef]}</strong></div>
-        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры</div>`;
+        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры или выберите ниже:</div>
+        <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
+          ${mealOptions(slotDef, '')}
+        </select>`;
       wrap.appendChild(card);
       return;
     }
@@ -1238,6 +1415,7 @@ function renderMenu() {
     if (r.kid) tags.push('детское');
     if (r.vegetarian) tags.push('без мяса');
     if (r.vegan) tags.push('веган');
+    const options = mealOptions(slotDef, r.id);
     card.innerHTML = `
       <div class="meal-head">
         <strong>${SLOT_LABELS[slotDef]}</strong>
@@ -1245,6 +1423,9 @@ function renderMenu() {
       </div>
       <div class="meal-name">${esc(r.name)}</div>
       <div class="meal-meta">${esc(r.cuisine)}${tags.length ? ' · ' + tags.map((t) => `<span class="tag">${t}</span>`).join(' ') : ''}</div>
+      <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
+        ${options}
+      </select>
       <div class="meal-nutrients">
         <span><b>${fmt(s.kcal)}</b> ккал</span>
         <span>Б ${fmt(s.protein)} г</span>
@@ -1262,6 +1443,48 @@ function renderMenu() {
       renderShopping();
     });
   });
+
+  wrap.querySelectorAll('[data-pick]').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      if (sel.value) setSlotRecipe(sel.dataset.pick, sel.value);
+    });
+  });
+}
+
+/* Список блюд для выпадающего выбора в слоте (с учётом фильтров) */
+function mealOptions(slotDef, currentId) {
+  const mealType = slotDef === 'snack1' || slotDef === 'snack2' ? 'snack' : slotDef;
+  const list = filterRecipes(state.filters).filter((r) => r.meal === mealType);
+  const hasCurrent = list.some((r) => r.id === currentId);
+  const cur = getRecipeNutrition(currentId);
+  let html = `<option value="">— выбрать из списка —</option>`;
+  if (!hasCurrent && cur) {
+    html += `<option value="${cur.id}" selected>${esc(cur.name)} (${fmt(cur.kcal)} ккал)</option>`;
+  }
+  list.forEach((r) => {
+    const selected = r.id === currentId ? 'selected' : '';
+    html += `<option value="${r.id}" ${selected}>${esc(r.name)} (${fmt(r.kcal)} ккал${r.kid ? ', детское' : ''})</option>`;
+  });
+  return html;
+}
+
+/* Поставить конкретное блюдо в слот (масштаб под целевую калорийность слота) */
+function setSlotRecipe(slotDef, recipeId) {
+  const recipe = getRecipeNutrition(recipeId);
+  const target = familyTargets.totals.kcal * SLOT_SHARES[slotDef];
+  const scale = target / recipe.kcal;
+  menu.slots = menu.slots.map((s) =>
+    s.slot === slotDef ? {
+      slot: slotDef, recipe, scale,
+      kcal: Math.round(recipe.kcal * scale),
+      protein: Math.round(recipe.protein * scale),
+      fat: Math.round(recipe.fat * scale),
+      carb: Math.round(recipe.carb * scale),
+      balance: 0,
+    } : s);
+  menu = recomputeMenuTotals(menu, familyTargets.totals.kcal);
+  renderMenu();
+  renderShopping();
 }
 
 function renderMenuSummary() {

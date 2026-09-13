@@ -63,8 +63,10 @@ function renderFamily() {
     card.className = 'person-card';
     card.innerHTML = `
       <div class="person-head">
-        <strong>${esc(p.role)}</strong>
-        ${p.isChild ? '<span class="badge kid">ребёнок</span>' : ''}
+        <strong>${esc(p.role)}</strong><span class="head-right">
+          ${p.isChild ? '<span class="badge kid">ребёнок</span>' : ''}
+          <button class="icon-btn person-remove" data-remove="${p.id}" title="Удалить">✕</button>
+        </span>
       </div>
       <label>Пол
         <select data-field="sex" ${p.isChild ? 'disabled' : ''}>
@@ -111,7 +113,63 @@ function renderFamily() {
     });
     wrap.appendChild(card);
   });
+
+  wrap.querySelectorAll('.person-remove').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.remove;
+      if (state.family.length <= 1) return;
+      if (!confirm('Удалить «' + state.family.find((p) => p.id === id)?.role + '» из рациона?')) return;
+      const idx = state.family.findIndex((p) => p.id === id);
+      if (idx >= 0) state.family.splice(idx, 1);
+      familyTargets = calcFamilyTargets(state.family);
+      saveState();
+      renderFamily();
+      menu = generateMenu(state.filters, familyTargets.totals.kcal);
+      choices = {};
+      renderMenu();
+      renderShopping();
+    });
+  });
+
+  setupAddPersonForm();
   renderFamilyTargets();
+}
+
+function setupAddPersonForm() {
+  const form = document.getElementById('add-person-form');
+  const btnAdd = document.getElementById('btn-add-person');
+  const btnCancel = document.getElementById('btn-cancel-add');
+  if (!form || !btnAdd) return;
+  btnAdd.addEventListener('click', () => {
+    form.classList.toggle('hidden');
+    if (!form.classList.contains('hidden')) document.getElementById('np-role').focus();
+  });
+  btnCancel.addEventListener('click', () => form.classList.add('hidden'));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const role = document.getElementById('np-role').value.trim();
+    if (!role) return;
+    const person = {
+      id: 'p' + Date.now(),
+      role,
+      sex: document.getElementById('np-sex').value,
+      age: parseInt(document.getElementById('np-age').value, 10) || 30,
+      weight: parseFloat(document.getElementById('np-weight').value) || 65,
+      height: parseFloat(document.getElementById('np-height').value) || 170,
+      activityMult: parseFloat(document.getElementById('np-activity').value) || 1.375,
+      isChild: document.getElementById('np-child').checked,
+    };
+    state.family.push(person);
+    familyTargets = calcFamilyTargets(state.family);
+    saveState();
+    form.classList.add('hidden');
+    document.getElementById('np-role').value = '';
+    renderFamily();
+    menu = generateMenu(state.filters, familyTargets.totals.kcal);
+    choices = {};
+    renderMenu();
+    renderShopping();
+  });
 }
 
 function renderFamilyTargets() {
@@ -183,7 +241,38 @@ function renderFilters() {
     renderShopping();
   });
 
-  document.getElementById('btn-generate').addEventListener('click', () => { menu = generateMenu(state.filters, familyTargets.totals.kcal); renderMenu(); renderShopping(); });
+  document.getElementById('btn-generate').onclick = () => { menu = generateMenu(state.filters, familyTargets.totals.kcal); renderMenu(); renderShopping(); };
+
+  const presetSel = document.getElementById('preset-select');
+  if (presetSel) {
+    presetSel.onchange = () => {
+      if (!presetSel.value) return;
+      applyPreset(presetSel.value);
+      presetSel.value = '';
+    };
+  }
+}
+
+/* Быстрые шаблоны рациона на день */
+function applyPreset(id) {
+  const f = state.filters;
+  if (id === 'normal') {
+    f.diet = 'any'; f.kidOnly = false; f.excludeAllergens = [];
+  } else if (id === 'vegetarian') {
+    f.diet = 'vegetarian'; f.kidOnly = false; f.excludeAllergens = [];
+  } else if (id === 'vegan') {
+    f.diet = 'vegan'; f.kidOnly = false; f.excludeAllergens = [];
+  } else if (id === 'kid') {
+    f.diet = 'any'; f.kidOnly = true; f.excludeAllergens = [];
+  } else if (id === 'gf-lf') {
+    f.diet = 'any'; f.kidOnly = false; f.excludeAllergens = ['глютен', 'лактоза'];
+  }
+  saveState();
+  renderFilters();          // перерисовать галочки фильтров под шаблон
+  menu = generateMenu(state.filters, familyTargets.totals.kcal);
+  choices = {};
+  renderMenu();
+  renderShopping();
 }
 
 function onFilterChange() {
@@ -220,7 +309,10 @@ function renderMenu() {
     if (!s || !s.recipe) {
       card.innerHTML = `
         <div class="meal-head"><strong>${SLOT_LABELS[slotDef]}</strong></div>
-        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры</div>`;
+        <div class="meal-empty">Нет подходящих блюд — смягчите фильтры или выберите ниже:</div>
+        <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
+          ${mealOptions(slotDef, '')}
+        </select>`;
       wrap.appendChild(card);
       return;
     }
@@ -229,6 +321,7 @@ function renderMenu() {
     if (r.kid) tags.push('детское');
     if (r.vegetarian) tags.push('без мяса');
     if (r.vegan) tags.push('веган');
+    const options = mealOptions(slotDef, r.id);
     card.innerHTML = `
       <div class="meal-head">
         <strong>${SLOT_LABELS[slotDef]}</strong>
@@ -236,6 +329,9 @@ function renderMenu() {
       </div>
       <div class="meal-name">${esc(r.name)}</div>
       <div class="meal-meta">${esc(r.cuisine)}${tags.length ? ' · ' + tags.map((t) => `<span class="tag">${t}</span>`).join(' ') : ''}</div>
+      <select class="meal-select" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">
+        ${options}
+      </select>
       <div class="meal-nutrients">
         <span><b>${fmt(s.kcal)}</b> ккал</span>
         <span>Б ${fmt(s.protein)} г</span>
@@ -253,6 +349,48 @@ function renderMenu() {
       renderShopping();
     });
   });
+
+  wrap.querySelectorAll('[data-pick]').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      if (sel.value) setSlotRecipe(sel.dataset.pick, sel.value);
+    });
+  });
+}
+
+/* Список блюд для выпадающего выбора в слоте (с учётом фильтров) */
+function mealOptions(slotDef, currentId) {
+  const mealType = slotDef === 'snack1' || slotDef === 'snack2' ? 'snack' : slotDef;
+  const list = filterRecipes(state.filters).filter((r) => r.meal === mealType);
+  const hasCurrent = list.some((r) => r.id === currentId);
+  const cur = getRecipeNutrition(currentId);
+  let html = `<option value="">— выбрать из списка —</option>`;
+  if (!hasCurrent && cur) {
+    html += `<option value="${cur.id}" selected>${esc(cur.name)} (${fmt(cur.kcal)} ккал)</option>`;
+  }
+  list.forEach((r) => {
+    const selected = r.id === currentId ? 'selected' : '';
+    html += `<option value="${r.id}" ${selected}>${esc(r.name)} (${fmt(r.kcal)} ккал${r.kid ? ', детское' : ''})</option>`;
+  });
+  return html;
+}
+
+/* Поставить конкретное блюдо в слот (масштаб под целевую калорийность слота) */
+function setSlotRecipe(slotDef, recipeId) {
+  const recipe = getRecipeNutrition(recipeId);
+  const target = familyTargets.totals.kcal * SLOT_SHARES[slotDef];
+  const scale = target / recipe.kcal;
+  menu.slots = menu.slots.map((s) =>
+    s.slot === slotDef ? {
+      slot: slotDef, recipe, scale,
+      kcal: Math.round(recipe.kcal * scale),
+      protein: Math.round(recipe.protein * scale),
+      fat: Math.round(recipe.fat * scale),
+      carb: Math.round(recipe.carb * scale),
+      balance: 0,
+    } : s);
+  menu = recomputeMenuTotals(menu, familyTargets.totals.kcal);
+  renderMenu();
+  renderShopping();
 }
 
 function renderMenuSummary() {

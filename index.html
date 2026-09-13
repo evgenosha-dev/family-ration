@@ -27,6 +27,51 @@
       <p class="hint">Настройте параметры каждого члена семьи — нормы калорий и БЖУ пересчитаются автоматически по формуле Миффлина — Сан Жеора.</p>
       <div id="family-cards" class="family-grid"></div>
       <div id="family-totals" class="family-totals"></div>
+      <div class="family-actions">
+        <button id="btn-add-person" class="btn">Добавить члена семьи</button>
+      </div>
+      <form id="add-person-form" class="add-person-form hidden">
+        <h3>Новый член семьи</h3>
+        <div class="grid2">
+          <label>Кто это (роль)
+            <input type="text" id="np-role" placeholder="Например: бабушка" required>
+          </label>
+          <label>Пол
+            <select id="np-sex">
+              <option value="f">Женский</option>
+              <option value="m">Мужской</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid3">
+          <label>Возраст
+            <input type="number" id="np-age" min="0" max="99" value="30">
+          </label>
+          <label>Вес, кг
+            <input type="number" id="np-weight" min="1" max="300" step="0.5" value="65">
+          </label>
+          <label>Рост, см
+            <input type="number" id="np-height" min="50" max="230" value="170">
+          </label>
+        </div>
+        <div class="grid2">
+          <label>Активность
+            <select id="np-activity">
+              <option value="1.2">Низкая</option>
+              <option value="1.375" selected>Средняя</option>
+              <option value="1.55">Высокая</option>
+              <option value="1.725">Очень высокая</option>
+            </select>
+          </label>
+          <label class="checkbox" style="align-self:end; padding-bottom:10px;">
+            <input type="checkbox" id="np-child"> Ребёнок до 3 лет (особый расчёт)
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Добавить</button>
+          <button type="button" id="btn-cancel-add" class="btn">Отмена</button>
+        </div>
+      </form>
     </section>
 
     <!-- МЕНЮ -->
@@ -59,7 +104,17 @@
             <span id="budget-value" class="budget-value"></span>
           </div>
         </div>
-        <button id="btn-generate" class="btn primary big">Сгенерировать меню на день</button>
+        <div class="generate-row">
+          <button id="btn-generate" class="btn primary" title="Пересобрать меню по текущим фильтрам">Сгенерировать меню на день</button>
+          <select id="preset-select" class="preset-select" title="Быстрый шаблон рациона">
+            <option value="">Шаблон дня…</option>
+            <option value="normal">Обычный день</option>
+            <option value="vegetarian">Вегетарианский</option>
+            <option value="vegan">Веганский</option>
+            <option value="kid">Детские блюда</option>
+            <option value="gf-lf">Без глютена и лактозы</option>
+          </select>
+        </div>
       </div>
 
       <div id="menu-nutrition-summary" class="summary"></div>

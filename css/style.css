@@ -233,3 +233,32 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
   .shop-table th, .shop-table td { padding: 7px 8px; }
   .site-header h1 { font-size: 23px; }
 }
+/* ---------- add/remove family members ---------- */
+.head-right { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.family-actions { margin-top: 14px; }
+.add-person-form {
+  margin-top: 14px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px; box-shadow: var(--shadow);
+}
+.add-person-form h3 { margin: 0 0 12px; font-size: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.form-actions { display: flex; gap: 10px; margin-top: 14px; }
+.hidden { display: none !important; }
+
+/* ---------- generate row & presets ---------- */
+.generate-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.preset-select {
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14.5px;
+  background: #fff; cursor: pointer; font-weight: 600;
+}
+
+/* ---------- meal dropdown ---------- */
+.meal-select {
+  width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
+  font-size: 13.5px; background: #fff; color: var(--ink); cursor: pointer; margin: 2px 0 6px;
+}
+.meal-select:hover { border-color: var(--accent); }
+
+@media (max-width: 640px) {
+  .grid3 { grid-template-columns: 1fr; }
+}
