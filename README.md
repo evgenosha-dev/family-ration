@@ -39,7 +39,7 @@ python -m http.server 8000
 3. **Settings → Pages → Build and deployment → Source: Deploy from a branch** → ветка `main`, папка `/ (root)`.
 4. Готово: `https://ваш-логин.github.io/family-ration/`.
 
-Либо оставьте файл `.github/workflows/pages.yml` — деплой выполнится автоматически при каждом «пуше».
+При каждом новом коммите в ветку `main` сайт обновляется автоматически — никаких действий больше не нужно.
 
 ## Варианты сайта
 
