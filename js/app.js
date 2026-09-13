@@ -311,7 +311,10 @@ function renderMenu() {
         <div class="meal-head">
           <strong>${SLOT_LABELS[slotDef]}</strong>
           <span class="meal-head-actions">
-            <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${mealOptions(slotDef, '')}</select>
+            <div class="pick-wrap">
+              <button type="button" class="pick-btn" data-pick-toggle="${slotDef}" title="Список блюд для ${SLOT_LABELS[slotDef]}">Блюда ▾</button>
+              <div class="pick-menu" data-pick-menu="${slotDef}">${pickMenuItems(slotDef, '')}</div>
+            </div>
             <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
           </span>
         </div>
@@ -324,12 +327,14 @@ function renderMenu() {
     if (r.kid) tags.push('детское');
     if (r.vegetarian) tags.push('без мяса');
     if (r.vegan) tags.push('веган');
-    const options = mealOptions(slotDef, r.id);
     card.innerHTML = `
       <div class="meal-head">
         <strong>${SLOT_LABELS[slotDef]}</strong>
         <span class="meal-head-actions">
-          <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${options}</select>
+          <div class="pick-wrap">
+            <button type="button" class="pick-btn" data-pick-toggle="${slotDef}" title="Список блюд для ${SLOT_LABELS[slotDef]}">Блюда ▾</button>
+            <div class="pick-menu" data-pick-menu="${slotDef}">${pickMenuItems(slotDef, r.id)}</div>
+          </div>
           <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
         </span>
       </div>
@@ -352,31 +357,24 @@ function renderMenu() {
       renderShopping();
     });
   });
-
-  wrap.querySelectorAll('[data-pick]').forEach((sel) => {
-    sel.addEventListener('change', () => {
-      const v = sel.value;
-      sel.value = '';
-      if (v) setSlotRecipe(sel.dataset.pick, v);
-    });
-  });
 }
 
-/* Список блюд для выпадающего выбора в слоте (с учётом фильтров) */
-function mealOptions(slotDef, currentId) {
+/* Список блюд для выпадающего меню в слоте (с учётом фильтров).
+   Возвращает кнопки-пункты; текущее блюдо подсвечено классом active. */
+function pickMenuItems(slotDef, currentId) {
   const mealType = slotDef === 'snack1' || slotDef === 'snack2' ? 'snack' : slotDef;
   const list = filterRecipes(state.filters).filter((r) => r.meal === mealType);
   const hasCurrent = list.some((r) => r.id === currentId);
   const cur = getRecipeNutrition(currentId);
-  let html = `<option value="">▾ выбрать</option>`;
+  let html = '';
   if (!hasCurrent && cur) {
-    html += `<option value="${cur.id}" selected>${esc(cur.name)} (${fmt(cur.kcal)} ккал)</option>`;
+    html += `<button type="button" class="pick-item active" data-pick-item="${slotDef}" data-recipe="${cur.id}">${esc(cur.name)} (${fmt(cur.kcal)} ккал)</button>`;
   }
   list.forEach((r) => {
-    const selected = r.id === currentId ? 'selected' : '';
-    html += `<option value="${r.id}" ${selected}>${esc(r.name)} (${fmt(r.kcal)} ккал${r.kid ? ', детское' : ''})</option>`;
+    const active = r.id === currentId ? ' active' : '';
+    html += `<button type="button" class="pick-item${active}" data-pick-item="${slotDef}" data-recipe="${r.id}">${esc(r.name)} (${fmt(r.kcal)} ккал${r.kid ? ', детское' : ''})</button>`;
   });
-  return html;
+  return html || '<div class="pick-empty">Нет подходящих блюд — смягчите фильтры</div>';
 }
 
 /* Поставить конкретное блюдо в слот (масштаб под целевую калорийность слота) */
@@ -558,4 +556,39 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFilters();
   renderMenu();
   renderShopping();
+  setupMealPickMenus();
 });
+
+/* Выпадающие списки блюд: один делегированный обработчик кликов.
+   Клик по «Блюда ▾» открывает меню, клик по блюду — ставит его в слот,
+   клик мимо — закрывает все открытые меню. */
+function setupMealPickMenus() {
+  document.addEventListener('click', (e) => {
+    const menu = e.target.closest('.pick-menu');
+    const toggle = e.target.closest('[data-pick-toggle]');
+    if (toggle) {
+      const box = toggle.closest('.pick-wrap');
+      const open = box.querySelector('.pick-menu').classList.contains('open');
+      closeMealPickMenus();
+      if (!open) {
+        box.querySelector('.pick-menu').classList.add('open');
+        toggle.classList.add('open');
+      }
+      return;
+    }
+    if (menu && e.target.closest('[data-pick-item]')) {
+      const item = e.target.closest('[data-pick-item]');
+      const slot = item.dataset.pickItem;
+      const recipeId = item.dataset.recipe;
+      closeMealPickMenus();
+      if (recipeId) setSlotRecipe(slot, recipeId);
+      return;
+    }
+    if (!menu) closeMealPickMenus();
+  });
+}
+
+function closeMealPickMenus() {
+  document.querySelectorAll('.pick-menu.open').forEach((m) => m.classList.remove('open'));
+  document.querySelectorAll('.pick-btn.open').forEach((b) => b.classList.remove('open'));
+}

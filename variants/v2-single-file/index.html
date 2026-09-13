@@ -254,15 +254,32 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding: 26px 0 40
   background: #fff; cursor: pointer; font-weight: 600;
 }
 
-/* ---------- meal pick button (рядом с ⟳) ---------- */
+/* ---------- кнопка «Блюда ▾» с выпадающим меню (рядом с ⟳) ---------- */
 .meal-head { display: flex; align-items: center; gap: 6px; }
-.meal-head-actions { display: inline-flex; align-items: center; gap: 6px; }
-.meal-pick-btn {
-  appearance: none; -webkit-appearance: none; max-width: 120px;
-  padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px;
+.meal-head-actions { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.pick-wrap { position: relative; }
+.pick-btn {
+  appearance: none; -webkit-appearance: none; white-space: nowrap;
+  padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px;
   font-size: 12.5px; font-weight: 600; background: #fff; color: var(--muted); cursor: pointer;
+  transition: .15s;
 }
-.meal-pick-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+.pick-btn:hover, .pick-btn.open { border-color: var(--accent); color: var(--accent-dark); }
+.pick-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+  min-width: 240px; max-width: 300px; max-height: 300px; overflow-y: auto;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 6px;
+}
+.pick-menu.open { display: block; }
+.pick-item {
+  display: block; width: 100%; text-align: left; background: none; border: 0;
+  padding: 7px 10px; border-radius: 7px; cursor: pointer;
+  font-size: 13.5px; color: var(--ink); line-height: 1.3;
+}
+.pick-item:hover { background: var(--bg); }
+.pick-item.active { background: var(--bg); color: var(--accent-dark); font-weight: 600; }
+.pick-empty { padding: 8px 10px; font-size: 13px; color: var(--muted); }
 
 /* ---------- ссылки на магазины в таблице цен ---------- */
 .price-link { color: inherit; text-decoration: none; }
@@ -1414,7 +1431,10 @@ function renderMenu() {
         <div class="meal-head">
           <strong>${SLOT_LABELS[slotDef]}</strong>
           <span class="meal-head-actions">
-            <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${mealOptions(slotDef, '')}</select>
+            <div class="pick-wrap">
+              <button type="button" class="pick-btn" data-pick-toggle="${slotDef}" title="Список блюд для ${SLOT_LABELS[slotDef]}">Блюда ▾</button>
+              <div class="pick-menu" data-pick-menu="${slotDef}">${pickMenuItems(slotDef, '')}</div>
+            </div>
             <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
           </span>
         </div>
@@ -1427,12 +1447,14 @@ function renderMenu() {
     if (r.kid) tags.push('детское');
     if (r.vegetarian) tags.push('без мяса');
     if (r.vegan) tags.push('веган');
-    const options = mealOptions(slotDef, r.id);
     card.innerHTML = `
       <div class="meal-head">
         <strong>${SLOT_LABELS[slotDef]}</strong>
         <span class="meal-head-actions">
-          <select class="meal-pick-btn" data-pick="${slotDef}" title="Выбрать блюдо для ${SLOT_LABELS[slotDef]} из списка">${options}</select>
+          <div class="pick-wrap">
+            <button type="button" class="pick-btn" data-pick-toggle="${slotDef}" title="Список блюд для ${SLOT_LABELS[slotDef]}">Блюда ▾</button>
+            <div class="pick-menu" data-pick-menu="${slotDef}">${pickMenuItems(slotDef, r.id)}</div>
+          </div>
           <button class="icon-btn" data-reg="${slotDef}" title="Перегенерировать">⟳</button>
         </span>
       </div>
@@ -1455,31 +1477,24 @@ function renderMenu() {
       renderShopping();
     });
   });
-
-  wrap.querySelectorAll('[data-pick]').forEach((sel) => {
-    sel.addEventListener('change', () => {
-      const v = sel.value;
-      sel.value = '';
-      if (v) setSlotRecipe(sel.dataset.pick, v);
-    });
-  });
 }
 
-/* Список блюд для выпадающего выбора в слоте (с учётом фильтров) */
-function mealOptions(slotDef, currentId) {
+/* Список блюд для выпадающего меню в слоте (с учётом фильтров).
+   Возвращает кнопки-пункты; текущее блюдо подсвечено классом active. */
+function pickMenuItems(slotDef, currentId) {
   const mealType = slotDef === 'snack1' || slotDef === 'snack2' ? 'snack' : slotDef;
   const list = filterRecipes(state.filters).filter((r) => r.meal === mealType);
   const hasCurrent = list.some((r) => r.id === currentId);
   const cur = getRecipeNutrition(currentId);
-  let html = `<option value="">▾ выбрать</option>`;
+  let html = '';
   if (!hasCurrent && cur) {
-    html += `<option value="${cur.id}" selected>${esc(cur.name)} (${fmt(cur.kcal)} ккал)</option>`;
+    html += `<button type="button" class="pick-item active" data-pick-item="${slotDef}" data-recipe="${cur.id}">${esc(cur.name)} (${fmt(cur.kcal)} ккал)</button>`;
   }
   list.forEach((r) => {
-    const selected = r.id === currentId ? 'selected' : '';
-    html += `<option value="${r.id}" ${selected}>${esc(r.name)} (${fmt(r.kcal)} ккал${r.kid ? ', детское' : ''})</option>`;
+    const active = r.id === currentId ? ' active' : '';
+    html += `<button type="button" class="pick-item${active}" data-pick-item="${slotDef}" data-recipe="${r.id}">${esc(r.name)} (${fmt(r.kcal)} ккал${r.kid ? ', детское' : ''})</button>`;
   });
-  return html;
+  return html || '<div class="pick-empty">Нет подходящих блюд — смягчите фильтры</div>';
 }
 
 /* Поставить конкретное блюдо в слот (масштаб под целевую калорийность слота) */
@@ -1661,7 +1676,42 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFilters();
   renderMenu();
   renderShopping();
+  setupMealPickMenus();
 });
+
+/* Выпадающие списки блюд: один делегированный обработчик кликов.
+   Клик по «Блюда ▾» открывает меню, клик по блюду — ставит его в слот,
+   клик мимо — закрывает все открытые меню. */
+function setupMealPickMenus() {
+  document.addEventListener('click', (e) => {
+    const menu = e.target.closest('.pick-menu');
+    const toggle = e.target.closest('[data-pick-toggle]');
+    if (toggle) {
+      const box = toggle.closest('.pick-wrap');
+      const open = box.querySelector('.pick-menu').classList.contains('open');
+      closeMealPickMenus();
+      if (!open) {
+        box.querySelector('.pick-menu').classList.add('open');
+        toggle.classList.add('open');
+      }
+      return;
+    }
+    if (menu && e.target.closest('[data-pick-item]')) {
+      const item = e.target.closest('[data-pick-item]');
+      const slot = item.dataset.pickItem;
+      const recipeId = item.dataset.recipe;
+      closeMealPickMenus();
+      if (recipeId) setSlotRecipe(slot, recipeId);
+      return;
+    }
+    if (!menu) closeMealPickMenus();
+  });
+}
+
+function closeMealPickMenus() {
+  document.querySelectorAll('.pick-menu.open').forEach((m) => m.classList.remove('open'));
+  document.querySelectorAll('.pick-btn.open').forEach((b) => b.classList.remove('open'));
+}
 </script>
 </body>
 </html>
